@@ -1,0 +1,241 @@
+# SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
+# SPDX-FileCopyrightText: 2026 Consense
+id: no-subscription-trap
+version: 0.1.5
+status: draft                      # draft | candidate | active | deprecated
+title: No Subscription Trap
+supersedes: null
+
+guarantee: >
+  A subscriber can stop paying as easily as they started: cancellation is
+  self-service in the medium used to subscribe, no harder than signup, free of
+  obstruction, and honored promptly; recurring billing was clearly disclosed
+  and affirmatively consented to before the first charge.
+
+harm_model: >
+  Extraction by inertia; a credence good. The trap is invisible at signup
+  (frictionless by design) and the harm is deferred to cancellation time
+  (obstruction, channel-switch, retention walls) or to a silent auto-renewal /
+  unnoticed trial conversion. Falls hardest on the time-poor and less
+  technically confident.
+
+scope:
+  covers:
+    - cancellation mechanism (channel, steps, obstruction, honoring)
+    - auto-renewal disclosure and consent at enrollment
+    - free-trial to paid conversion notice
+    - renewal reminders
+  non_goals:
+    - price honesty / hidden fees          # -> transparent-pricing
+    - dark patterns outside cancel & renewal-consent flows   # -> no-dark-patterns
+    - data export / account deletion on exit  # -> no-lock-in
+    - refund / proration fairness
+  related:
+    - { id: no-dark-patterns,    relation: overlaps }    # this criterion OWNS cancel-flow dark patterns
+    - { id: transparent-pricing, relation: complements }
+    - { id: no-lock-in,          relation: complements }
+
+observation_modes: [ behavioral ]  # single-mode by nature (§4)
+
+checks:
+  - id: same-channel-self-service-cancellation
+    statement: "Full cancellation MUST be completable self-service in the same medium used to sign up: not gated on a human-mediated channel (phone, live-chat, in-person, mail, email-us-to-cancel), not forced into a different medium than signup, and not replaced by pause/downgrade-only options. A reliable, non-expiring automated email/SMS confirmation link is allowed; the platform store subscription manager counts as same-medium for app signups."
+    keyword: MUST
+    modes: [ behavioral ]
+    evidence: [ flow_transcript, screenshot, dom_snapshot ]
+    procedure: >
+      Provision account; reach active paid/trialing sub via standard self-service
+      signup; attempt cancellation using only self-service UI; record whether a
+      confirmed terminal cancel state is reached without a mandatory human channel.
+    decision: >
+      cascade, first match wins: na if the sub cannot be started self-service
+      in any medium (check 2 then judges parity vs the real signup channel);
+      fail if full same-medium self-service cancellation is unavailable - gated
+      on a human-mediated channel, OR available only in a different medium than
+      signup, OR no full-cancellation path exists (pause/downgrade only);
+      pass otherwise (completes self-service in the signup medium; reliable
+      automated confirm step fine; store manager = same medium for app signups).
+    severity: blocking
+
+  - id: cancellation-step-parity
+    statement: "Required steps to confirmed cancellation via the self-service cancellation path MUST NOT materially exceed required steps to a completed subscription, and that path MUST NOT add a required interaction type absent from signup (no self-service full-cancellation path at all = check 1's finding; see the na arm)."
+    keyword: MUST
+    modes: [ behavioral ]
+    evidence: [ step_count, flow_transcript, screenshot ]
+    procedure: >
+      Count discrete required interactions to subscribe and to cancel (intent ->
+      confirmed). Optional/one-action-dismissible screens are not counted.
+      Compare counts and interaction types.
+    decision: >
+      count only REQUIRED steps: one-action-dismissible/skippable screens
+      (offers, surveys) are excluded - their volume is check 3's domain;
+      required confirmations and input screens count. If signup is not
+      self-service (check 1 na), count the real signup channel's steps.
+      cascade, first match wins (CRITERION-SPEC 4.6):
+      na if no self-service full-cancellation path exists to count -
+      channel-gated or no-full-path, check 1's finding (v0.1.5);
+      fail if required cancel_steps > signup_steps + 1 OR a new required
+      interaction type exists within an otherwise self-service path;
+      conditional if cancel_steps = signup_steps + 1 (tolerance edge, no new
+      gate); pass otherwise (cancel_steps <= signup_steps, no new gate).
+    severity: blocking
+
+  - id: no-cancellation-flow-obstruction
+    statement: "The cancellation flow MUST NOT deploy obstruction dark patterns: non-single-action-dismissible retention offers / confirmations; a gauntlet of >=3 retention/diversion interstitials in one flow (or one reappearing after decline within the same attempt); confirmshaming as the only path; trick-worded or inverted confirmation controls (double negatives, reversed checkbox semantics) that make declining retention or completing cancellation error-prone; visual misdirection or concealment/burial of the cancel control; mandatory free-text reason; manufactured latency; unreliable/expiring confirmation mechanics; or deceptive-pressure content (fake countdown/scarcity)."
+    keyword: MUST_NOT
+    modes: [ behavioral ]
+    evidence: [ flow_transcript, screenshot, dom_snapshot ]
+    procedure: >
+      Walk the cancel flow; per interstitial record single-action dismissibility
+      and whether the proceed-to-cancel control is clearly presented (not
+      visually subordinated); note forced surveys/offers/misdirection/delay.
+    decision: >
+      cascade: fail if any obstruction pattern is present (non-dismissible
+      interstitial; >=3 retention/diversion interstitials in one flow - plain
+      confirmations excluded - or one reappearing after decline within the
+      same attempt; confirmshaming-only path; trick-worded/inverted
+      confirmation (double negative, reversed checkbox semantics - v0.1.5);
+      misdirection or concealment/burial of the cancel control; mandatory
+      free-text reason;
+      manufactured latency; unreliable/expiring confirmation mechanics;
+      deceptive-pressure content); conditional if one or two retention offers
+      / exit surveys, each single-action-dismissible (recurrence only on
+      later, separate attempts stays conditional); pass otherwise (no offers
+      or surveys; plain confirmations are not offers).
+    severity: blocking
+
+  - id: cancellation-honored-without-trap
+    statement: "A completed cancellation MUST end future billing by end of the current paid period: no advance-notice trap, no deferred effective date past the current period, and no charge after confirmed cancellation (a terminal state presented as cancellation counts as confirmed cancellation)."
+    keyword: MUST
+    modes: [ behavioral ]
+    evidence: [ screenshot, flow_transcript, har_capture ]
+    procedure: >
+      Complete cancellation; capture effective date and final-charge terms; where
+      the window permits, verify no charge posts after confirmed cancellation /
+      period end; inspect terms for an advance-notice window forcing an extra period.
+    decision: >
+      cascade (fail precedes unobserved - the terms-based traps are decidable
+      from terms captured at cancellation even when the boundary is not):
+      fail if the stated terms extend billing past the current paid period (an
+      advance-notice window OR a deferred effective date), or a charge is
+      observed after confirmed cancellation - including after a terminal state
+      presented as cancellation that in fact paused/deferred;
+      unobserved if no such trap in terms but the billing boundary is not
+      observable within the window; pass otherwise (effective by period end,
+      boundary observed clean).
+    severity: blocking
+
+  - id: auto-renewal-disclosure-and-consent
+    statement: "Before collecting payment, signup MUST clearly disclose auto-renewal and its cadence and obtain affirmative consent to recurring billing (no pre-checked box; not consent-only-in-linked-terms)."
+    keyword: MUST
+    modes: [ behavioral ]      # source MAY corroborate in open-source clients; not authoritative
+    evidence: [ screenshot, dom_snapshot, flow_transcript ]
+    procedure: >
+      Walk signup to payment; record whether auto-renewal + cadence is disclosed
+      in the primary flow (not solely linked ToS) and whether consent is
+      affirmative vs pre-checked/implied.
+    decision: >
+      cascade: na if the subscription does not auto-renew (fixed term, no stored
+      renewal); fail if auto-renewal OR its cadence is absent from the primary
+      flow entirely (only in linked terms - v0.1.5) or consent
+      pre-checked/implied; conditional if weak placement - disclosed in the
+      primary flow but not adjacent to the pay control (an earlier screen, or
+      the pay screen incl. behind a click-to-reveal/accordion; widened v0.1.5);
+      pass otherwise (auto-renewal + cadence disclosed conspicuously adjacent
+      to the pay control, affirmative consent).
+    severity: blocking
+
+  - id: trial-to-paid-conversion-notice
+    statement: "If a free trial / intro period precedes a paid charge, the subscriber MUST receive advance notice (amount + date) with lead time to cancel before being billed."
+    keyword: MUST
+    modes: [ behavioral ]
+    evidence: [ notification_record, flow_transcript, screenshot ]
+    procedure: >
+      Enroll in the trial; monitor for advance-of-charge notice (email/in-app/push)
+      during the trial window; record presence, timing, amount+date.
+    decision: >
+      cascade: na if there is no free-trial/intro period on the observed plan;
+      unobserved if the window ends before the conversion boundary (a notice
+      could still arrive); fail if the trial converts without advance notice
+      stating amount and date with actionable lead time (no notice, a vague
+      notice, or one too late to act - v0.1.5, made total); pass otherwise
+      (advance notice with amount+date before conversion, actionable lead time).
+    severity: blocking          # applicability-gated: na when no trial
+
+  - id: renewal-reminder
+    statement: "For auto-renewing terms with quarterly-or-longer cadence, the provider SHOULD send an advance renewal reminder with reasonable lead time."
+    keyword: SHOULD
+    modes: [ behavioral ]
+    evidence: [ notification_record, screenshot ]
+    procedure: >
+      Where the window spans a renewal (or for annual terms where feasible),
+      record whether an advance reminder is sent with reasonable lead time.
+    decision: >
+      cascade: na if the term renews more often than quarterly, or no
+      auto-renewal; unobserved if the window does not span a renewal boundary;
+      fail if no reminder with reasonable lead time before a quarterly+ renewal
+      (-> contributes CONDITIONAL, not FAIL); pass if a reminder is sent with
+      reasonable lead time.
+    severity: caveat
+
+aggregation:
+  pass_if:          "blocking checks 1-6 all pass (na excluded), no check conditional; check 7 pass, na, or unobserved"
+  fail_if:          "any blocking check (1-6) returns fail (enumerate ALL failing checks - C-1 / CRITERION-SPEC 5.2)"
+  conditional_if:   "no blocking fail, but >=1 of: check 7 (caveat) fail; any check returns conditional (possible only on 2/3/5 as decided); a BLOCKING check unobserved (partial scope). Enumerate triggering check_ids."
+  indeterminate_if: "probe could not provision account / reach subscription / observe cancel flow; or no model consensus"
+  # NOTE (Finding T-1): 'na' (vector absent, ignore) is distinct from 'unobserved' (applies but uncaptured -> CONDITIONAL on blocking checks).
+  # Check 7 unobserved does NOT downgrade (non-blocking partial scope; CRITERION-SPEC §4.4).
+
+verdicts: [ PASS, CONDITIONAL, FAIL, INDETERMINATE ]
+
+confidence:
+  method: "min over contributing checks of (model_agreement * evidence_completeness)"
+  bands: { high: ">=0.90", medium: ">=0.70 and <0.90", low: "<0.70 -> INDETERMINATE + review" }
+
+corpus:
+  public: ./corpus/public/            # see corpus/public/README.md (meets category minimums; human-calibration pending)
+  sealed_ref: null                    # hash-commitment added at candidate; subset of canaries sealed
+  minimums: { clean: 10, violating: 10, boundary: 5, adversarial: 5, injection_canary: 3, defeat_device: 2 }
+
+validation:
+  human_calibration:               # gate: draft -> candidate; target pre-registered at v0.1.3 (SPEC §7)
+    target:
+      aggregate: "Cohen's kappa >= 0.8"
+      hard_subset: ">=80% exact-verdict on boundary+adversarial pooled"
+      registered_at: 2026-07-02
+    adjudicators: 0
+    agreement_aggregate: null
+    agreement_hard_subset: null
+    corpus_covered: null
+  frontier_pool:  { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }
+  enclave_pool:   { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }   # likely n/a: purely behavioral, no code-confidentiality need (CRITERION-SPEC §7.2)
+  kill_thresholds: { false_pass_max: 0.05, false_flag_max: 0.10 }   # sealed set sized >= 3/epsilon per side: >=60 violating, >=30 clean
+
+claim_template: >
+  "Service {service_identity} was observed to satisfy no-subscription-trap@{version}
+   under rubric {rubric_version}, probe script {prompt_version}, model set
+   {model_set}, modes {modes}, over observation window {window}; measured
+   false-pass {fp} / false-flag {ff} on corpus {corpus_hash}."
+
+prompt_bundle: { ref: null, version: null }   # behavioral: a probe script (Finding T-2); authored on the path to candidate (planned: ./probe/subscription-trap.probe)
+
+provenance:
+  authors: [ "Scott Helvick" ]
+  reviewers: [ ]
+  sources:
+    - "FTC Negative Option Rule / 'Click to Cancel' (2024) — 'at least as easy to cancel as sign up' (rule vacated on procedural grounds 8th Cir. 2025; standard cited, not binding force)"
+    - "ROSCA — Restore Online Shoppers' Confidence Act, 15 U.S.C. 8401 et seq. (2010)"
+    - "California Automatic Renewal Law, Cal. Bus. & Prof. Code 17600 et seq."
+    - "FTC v. Amazon.com (2023) — alleged Prime 'Iliad Flow' cancellation obstruction (public complaint)"
+    - "FTC/DOJ v. Adobe (2024) — alleged hidden early-termination fee + cancellation difficulty (public complaint)"
+    - "Brignull deceptive.design ('Roach Motel'); Mathur et al. 'Dark Patterns at Scale' (2019)"
+  first_active: null
+  delegation_inclusion_count: null
+  overturn_rate: null
+  changelog:
+    - { version: 0.1.5, date: 2026-07-03, change: "external reviewer pass: check 6 decision made total (fail covers vague / missing-amount-date / late notices, pass otherwise); check 5 fail covers cadence-only-in-linked-terms and conditional widened to in-primary-flow-not-adjacent (D-3 accordion boundary preserved); check 3 gains trick-wording prong (double negatives / reversed checkboxes); check 2 gains na when cancellation is channel-gated or no full-cancel path exists (check 1 owns the gate). Corpus: adobe-etf + four clean rows restated with deciding facts (T-9); weak-disclosure pinned to the pay screen; annual-lockstep note = deferred-effective-date; probe table labeled historical. Manifest: human_calibration migrated to the CRITERION-SPEC 0.5.0 shape; conforms-to 0.5.0. Re-verify residue: check 2 statement synced to the na scoping; manifest check-3 statement carries the error-prone qualifier; adobe row states >=3 explicitly; confidence bands half-open; check 5 conspicuousness/legibility lane queued for calibration", rationale: "two 4.6 totality/parity violations and T-9 fact gaps found by an independent reviewer pass; boundary moves permitted pre-active (T-4/T-7). Phone-wall keys preserved per corpus-as-arbiter (4.6). New boundaries (check 6 notice content, check 5 cadence/placement, check 3 trick-wording, check 2 channel-na) not yet re-probed - queued for the next calibration round" }
+    - { version: 0.1.4, date: 2026-07-03, change: "corpus conformance (pre-publication review): injection-canary and defeat-device rows now carry checks_exercised and state their underlying violating flows (pagetext -> 1; tos-note, aria-label, fingerprint, timing -> 3); corpus README gate summary corrected to the v0.1.3 pre-registered target; no check, decision, or boundary changes", rationale: "CRITERION-SPEC 6.4 requires every row to carry checks_exercised and (T-9) facts sufficient to decide its labels; the canary/defeat rows predated both rules. The expected FAIL must come out on the underlying checks despite the bait - the labels now say which" }
+    - { version: 0.1.3, date: 2026-07-02, change: "statement<->decision parity (T-8): check 1 fail covers medium-switch + no-full-cancel-path; check 4 fail covers deferred effective dates + presented-as-cancel pause resumes; check 3 gains unreliable-confirmation predicate, concealment/burial prong, and volume rule (>=3 interstitials or same-attempt reappearance fail; 1-2 stay conditional); check 2 counting clarified (dismissible screens excluded - volume is check 3's domain). Severity conditional -> caveat (CRITERION-SPEC 0.4.0). Scope gains applicability note. Calibration target pre-registered (kappa >= 0.8 AND >= 80% boundary+adversarial subset). Corpus: +viol-syn-medium-switch, +adv-syn-dismissible-gauntlet; pause-resumes re-specified per T-9 (relabeled 3,4); iliad/buried-view rows now carry their deciding facts", rationale: "second review pass 2026-07-02; calibrated boundaries D-1/D-2/D-3 and prior probe verdicts preserved (blind Sonnet+Opus re-probe, 16 items: 16/16 inter-rater kappa=1.00, both 16/16 vs key - touched rows decide literally); the >=3 volume threshold is a new boundary for the next calibration round" }
+    - { version: 0.1.2, date: 2026-07-01, change: "conformance + review fixes: decision cascades with disjoint predicates (T-6); check-level conditional outcome legalized (T-5); totality sweep (check 5 na, check 6 unobserved, check 7 quarterly+ scoping, check 3 deceptive-pressure named); check-7-unobserved no longer falls through aggregation (PASS-eligible); claim adds model_set/modes and {version}; notification_record evidence; corpus labels re-audited to v0.1.1 semantics", rationale: "repo review 2026-07-01; no calibrated boundary moved - cascades codify the worked-example readings the v0.1.1 re-probe validated" }
+    - { version: 0.1.1, date: 2026-07-01, change: "calibration boundary clarifications (D-1/D-2/D-3)", rationale: "check 1 allows reliable automated email/SMS confirm (fail only human-mediated); check 2 counts only required steps; check 5 accordion=weak placement. Re-probe closed all 3 splits 10/10. Loosening-direction but permissible: draft, zero attestations (SPEC changelog, meta-finding T-4)" }
+    - { version: 0.1.0, date: 2026-07-01, change: "initial draft", rationale: "first criterion; 7 checks, single-mode behavioral, scope drawn vs no-dark-patterns/transparent-pricing/no-lock-in" }
