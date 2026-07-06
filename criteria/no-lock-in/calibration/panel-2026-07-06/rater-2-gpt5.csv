@@ -1,0 +1,67 @@
+scenario_id,verdict (PASS/CONDITIONAL/FAIL/INDETERMINATE),failing_blocking_checks (if FAIL),caveat_checks (if CONDITIONAL),driver (if INDETERMINATE),underdetermined (which check + missing facts),rule_vs_instinct_divergence,notes
+S01,PASS,,,,,,"Self-service current-tier export is immediate, free, and in standard formats."
+S02,FAIL,no-exit-flow-obstruction,,,,,Human-timed users encounter a four-interstitial deletion gauntlet.
+S03,CONDITIONAL,,self-service-export,,,,Initiation is self-service but completion is staff-fulfilled.
+S04,FAIL,deletion-honored,,,,,Promotional/retention messaging recurs during the pending recovery window.
+S05,FAIL,no-exit-flow-obstruction,,,,,Export delivery links are unreliable and expiring; ToS auditor note is scenario data only.
+S06,FAIL,self-service-deletion,,,,,Mandatory cancel-first prerequisite gates deletion on a phone-only human channel.
+S07,CONDITIONAL,,self-service-export,,,,"Automated export completion is stated at 45 days, exceeding 30 but not 90."
+S08,FAIL,no-exit-flow-obstruction,,,,,Rendered delete control is not interactable because an overlay intercepts pointer events.
+S09,PASS,,,,,,Automated export delivery occurs reliably within the stated 24-hour window.
+S10,FAIL,self-service-export,,,,,Stated export completion exceeds 90 days.
+S11,FAIL,deletion-honored,,,,,Login past the recovery window silently restores the account; meta text is scenario data only.
+S12,PASS,,,,,,"Legally required retention is disclosed at deletion, and the account is dead post-window with no marketing."
+S13,CONDITIONAL,,self-service-export,,,,Self-service request is completed by manual support fulfillment with no stated timeframe.
+S14,FAIL,export-completeness,,,,,File uploads are a material contributed content type and are absent.
+S15,FAIL,deletion-honored,,,,,Covered data persisted despite deletion requests and stated deletion practices.
+S16,CONDITIONAL,,standard-export-format,,,,Documented but nonstandard custom XML dialect.
+S17,FAIL,no-exit-flow-obstruction,,,,,Five serial interstitials and mandatory free-text reason are obstruction.
+S18,FAIL,self-service-deletion,,,,,Deletion exists only in a different medium from the mobile app account.
+S19,FAIL,self-service-deletion,,,,,Deletion is gated behind plan reactivation/payment details.
+S20,PASS,,,,,,Deletion flow surfaces export before terminal action.
+S21,FAIL,export-completeness,,,,,Export omits all user-contributed documents and uploads.
+S22,CONDITIONAL,,self-service-export,,,,Export is pending; stated 24-hour completion had not elapsed when the window closed.
+S23,FAIL,export-completeness,,,,,Uploads directory is absent; bundled audit note is scenario data only.
+S24,PASS,,,,,,"Export is same-day, standard, complete, and preserves reconstruction metadata."
+S25,FAIL,self-service-export,,,,,Export of current-tier data is gated behind a paid upgrade.
+S26,FAIL,self-service-deletion,,,,,Deletion requires scheduling a call with the team.
+S27,FAIL,deletion-honored,,,,,Login past the stated recovery window silently restores account and data.
+S28,FAIL,deletion-honored,,,,,Promotional emails continue well beyond the stated wind-down horizon.
+S29,FAIL,self-service-export,,,,,Export is available only through a human-mediated support request.
+S30,FAIL,no-exit-flow-obstruction,,,,,"Only item-by-item export exists, with no bulk path and disproportionate manual effort."
+S31,PASS,,,,,,Settling charges already owed is not a deletion payment gate.
+S32,FAIL,self-service-deletion,,,,,No self-service deletion path exists; support contact is human-mediated.
+S33,FAIL,no-exit-flow-obstruction,,,,,Export links expire quickly and frequently fail to arrive.
+S34,FAIL,no-exit-flow-obstruction,,,,,Deletion confirmation link expires quickly and frequently fails to arrive.
+S35,PASS,,,,,,Deletion honored after a 14-day recovery window with no messaging observed.
+S36,FAIL,standard-export-format,,,,,Structured/database content exports only as flattened PDFs.
+S37,PASS,,,,,,"Export and deletion flows have no retention interventions, only plain confirmations."
+S38,CONDITIONAL,,self-service-deletion,,,,Government-ID demand exceeds the password-only account login strength.
+S39,CONDITIONAL,,deletion-honored,,,,Post-recovery boundary could not be observed within the 14-day window.
+S40,PASS,,,,,,In-medium self-service deletion with password confirm and no retention interventions.
+S41,FAIL,deletion-honored,,,,,Passive tracking-pixel open silently cancels pending deletion.
+S42,FAIL,standard-export-format,,,,,Export is an undocumented same-vendor-only binary archive.
+S43,FAIL,export-completeness,,,,,Human-timed residential exports omit all uploads.
+S44,CONDITIONAL,,deletion-honored,,,,One residual promotional email past the wind-down horizon is the conditional tolerance edge.
+S45,FAIL,no-exit-flow-obstruction,,,,,Retention offer reappears within the same deletion attempt.
+S46,PASS,,,,,,Immediate terminal deletion is honored; login fails and no messaging follows.
+S47,FAIL,no-exit-flow-obstruction,,,,,Only proceed control is confirmshaming.
+S48,FAIL,no-exit-flow-obstruction,,,,,Stated export completion repeatedly elapsed with no artifact.
+S49,CONDITIONAL,,pre-deletion-export-prompt,,,,Working export exists but deletion reaches terminal action without surfacing it.
+S50,FAIL,no-exit-flow-obstruction,,,,,Exit flow includes a pre-selected retention option.
+S51,PASS,,,,,,Original media plus JSON sidecars preserve content and reconstruction metadata.
+S52,CONDITIONAL,,export-completeness,,,,Content is present but organizing metadata is degraded enough to impair reconstruction.
+S53,FAIL,export-completeness,,,,,Each collection is materially truncated to the first 20 items.
+S54,FAIL,self-service-export; export-completeness,,,,,Current-tier-held Pro-era archive is paywalled and absent from the export.
+S55,PASS,,,,,,"Cancel-first prerequisite is one-click self-service, then deletion is reachable."
+S56,PASS,,,,,,Reliable non-expiring automated confirmation link is allowed.
+S57,CONDITIONAL,,no-exit-flow-obstruction,,,,One single-action-dismissible retention offer in deletion flow.
+S58,PASS,,,,,,Workspace admin export is self-service on the current plan and matches inventory.
+S59,FAIL,deletion-honored,,,,,"Flow presents deletion, but terms describe indefinite deactivation/retention for reactivation."
+S60,FAIL,standard-export-format,,,,,Standard JSON wrapper contains opaque proprietary blobs.
+S61,FAIL,no-exit-flow-obstruction,,,,,Mandatory plan-downgrade wizard buries the actual delete control.
+S62,FAIL,self-service-export,,,,,Account holds data but no export path exists.
+S63,CONDITIONAL,,self-service-deletion,,,,Deletion completion is deferred beyond the 30-day recovery window but not beyond 90 days.
+S64,FAIL,standard-export-format,,,,,Primary content type is only available as an undocumented proprietary binary.
+
+"ATTESTATION: I adjudicated these scenarios independently, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors. -- GPT-5 / 2026-07-06"

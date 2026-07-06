@@ -1,7 +1,7 @@
 # `no-subscription-trap` — No Subscription Trap
 
-**Version:** 0.1.8 · **Status:** draft
-**Conforms to:** CRITERION-SPEC 0.6.0 (`../CRITERION-SPEC.md`)
+**Version:** 0.1.9 · **Status:** draft
+**Conforms to:** CRITERION-SPEC 0.6.1 (`../CRITERION-SPEC.md`)
 **Observation mode:** behavioral (single-mode — see §4)
 
 ---
@@ -137,7 +137,7 @@ Seed corpus and provenance discipline live in `./corpus/public/README.md`. Two r
 
 Behavioral note: probe accuracy sits close to ground truth (observing a flow, not judging code), so the harder validation target here is **defeat-device red-teaming** (§9) rather than semantic false-flags.
 
-**Calibration dry-run (proxy — not the formal §7.1 gate):** documented in `calibration-dryrun.md`. Ordinary examples reproduce the intended verdicts at ~100% (two blind panels, 35/35 each), and a model-diverse Sonnet+Opus panel over all 40 items (the 35 plus five *engineered-ambiguous* probes) reached κ = 0.87 (37/40), with all three disagreements landing on probe check-boundaries (§12). A real gate pass still needs independent human adjudicators, so `human_calibration` stays `0`.
+**Calibration dry-run (proxy — not the formal §7.1 gate):** documented in `calibration-dryrun.md`. Ordinary examples reproduce the intended verdicts at ~100% (two blind panels, 35/35 each), and a model-diverse Sonnet+Opus panel over all 40 items (the 35 plus five *engineered-ambiguous* probes) reached κ = 0.87 (37/40), with all three disagreements landing on probe check-boundaries (§12). A third run — the first **cross-vendor** panel (Claude + GPT-5), over the **full 42-row corpus** as formally blinded packets (`calibration/panel-2026-07-06/`) — reached **42/42 (κ = 1.00), both raters 42/42 vs the key, zero underdetermined**, with the deliberate strict positions held rule-over-instinct on an unrelated lineage; three T-9 row-fact gaps fixed at 0.1.9, and the silence-semantics convention both raters had to invent promoted to the mold (T-12 → CRITERION-SPEC 0.6.1). A real gate pass still needs independent human adjudicators, so `human_calibration` stays `0`.
 
 ## 8. Claim language (§8)
 
@@ -169,6 +169,7 @@ Because this is behavioral, the bound artifact is a **probe script**, not an ove
 - **first_active:** —
 - **delegation_inclusion_count / overturn_rate:** — (post-launch)
 - **Changelog:**
+  - `0.1.9` — cross-vendor panel folded in (run 3, 2026-07-06: Claude + GPT-5, full 42-row corpus, formal blinded packets): **42/42 (κ = 1.00), both raters 42/42 vs key, zero underdetermined**; the separate-attempt recurrence cap held rule-over-instinct on an unrelated lineage. Three T-9 row-fact fixes from panel flags: the pagetext canary states its signup channel; retention-maze states its two-step signup (check 2 now literally grounded); the accordion probe states cadence-inside-accordion. Adobe-row fact coarseness noted as inherent to enforcement rows. The silence-semantics convention promoted to the mold (T-12, CRITERION-SPEC 0.6.1 — conforms-to updated). Evidence: `calibration/panel-2026-07-06/`.
   - `0.1.8` — editorial (2026-07-06). §3.3 gains the **combined cancel-and-delete flow** interstitial targeting rule, mirroring `no-lock-in` 0.1.1 (their review finding D-7): both criteria carry the same ≥3 volume rule, so a shared flow needed a count-each-interstitial-exactly-once allocation — subscription-retention pitches → this check 3; account/data-retention pitches → their check 5; plain confirmations → neither. No check, decision, or boundary changes; check 3's own counting is unchanged for pure cancellation flows.
   - `0.1.7` — conformance bump to CRITERION-SPEC 0.6.0 (2026-07-06). The 0.6.0 changes (per-mode audit artifacts, §4.7 mode-join lattice, per-(pool × mode) validation cells) are additive machinery for **multi-mode** criteria; this criterion is single-mode behavioral, its flat `prompt_bundle` and per-pool validation shapes remain the legal Appendix A forms, and nothing here changes. Conforms-to line only.
   - `0.1.6` — editorial (2026-07-06). §3.3's ownership line restated **fact-based** ("cancellation flow + the auto-renewal disclosure/consent facts of signup"): the old "renewal-consent *flows*" wording read as claiming the whole signup flow, leaving signup-adjacent manipulation (fake urgency beside the consent control, pre-checked marketing boxes) ambiguously owned — surfaced by the `no-dark-patterns` 0.1.1 review (its finding D-6). No check, decision, or boundary changes; the intent was always the facts reading (checks 5/6 police exactly those facts).
@@ -189,7 +190,7 @@ Authoring the first criterion surfaced three gaps in the mold (`../CRITERION-SPE
 
 ## 12. Open check-boundary findings (from calibration)
 
-The calibration dry-run's ambiguity probes (`calibration-dryrun.md`) split two independent raters on three check boundaries. **All three are resolved in v0.1.1** (checks 1/2/5 above); a re-probe closed every split (10/10 inter-rater). Retained as the record of what calibration found:
+The calibration dry-run's ambiguity probes (`calibration-dryrun.md`) split two independent raters on three check boundaries. **All three are resolved in v0.1.1** (checks 1/2/5 above); a re-probe closed every split (10/10 inter-rater), and the cross-vendor full-corpus run (run 3, 2026-07-06) re-held all three blind — including the separate-attempt recurrence cap, logged again as rule-over-instinct. Retained as the record of what calibration found:
 
 - **D-1 — check 1 (same-channel): automated confirmation vs human channel.** Requiring the user to click an *automated, instant, non-expiring* email/SMS confirmation link split raters (FAIL vs PASS). The check lists "email" as a forbidden channel, but there is a real difference between "email support to plead for cancellation" (obstructive) and "click an emailed confirmation link" (a verification step). Resolution: check 1 fails only when cancellation is gated on a *human-mediated* channel; an automated confirmation step is allowed — and if unreliable/expiring, it fails under check 3 (obstruction) instead. (cf. corpus `viol-syn-email-confirm-expiry` FAIL vs probe `probe-email-cancel-reliable`.)
 - **D-2 — check 2 (step-parity): do optional steps count?** A cancel flow with an *optional, skippable* interstitial split raters (FAIL on raw step count vs CONDITIONAL counting required steps only). The check already says "required interactions"; the fix is to make "optional/skippable steps are not counted" prominent and add a worked example.

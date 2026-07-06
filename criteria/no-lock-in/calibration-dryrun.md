@@ -44,3 +44,16 @@ Rule-over-instinct divergences, concentrated exactly where the strict/lenient li
 - P-1's derivatives wording and P-2's dual-enumeration rule are new text — not yet re-probed.
 - The §11 queue's deliberately-unclosed items stand: export frequency caps, post-termination retrieval grace (candidate caveat check), documented-but-vacuous format docs, the messaging-facet split (D-28).
 - The formal §7.1 gate: ≥2 independent **human** adjudicators against a pre-registered target (not yet registered for this criterion — register before adjudication; expected to mirror the siblings').
+
+## Run 2 — cross-vendor panel (Claude + GPT-5), full 64-row corpus, formal blinded packets (2026-07-06)
+
+**Method.** As the siblings': the formal adjudication kit (`../ADJUDICATION.md`), all 64 rows, id- and annotation-stripped, per-rater shuffled variants, §1–§5 excerpt only. First out-of-lineage rater (GPT-5, load-bearing); Claude is author-lineage, discounted.
+
+**Results.** **64/64 inter-rater (κ = 1.00); hard subset (n=22) 22/22; both raters 64/64 against the key; zero underdetermined** — including P-1/P-2's 0.1.2 wording, previously un-re-probed.
+
+**Flags → actions (0.1.5).**
+
+- **S57 `bound-syn-single-offer`** — rater 1 raised exactly the watch-list's combined-flow targeting question (a subscription-pitch reading would route the offer to the sibling's check 3 and change what the flow counts). Resolved to the keyed CONDITIONAL; the row now states its pitch target ("keep your account") and the absence of any subscription pitch, making the targeting rule literally decidable from the row (0.1.5).
+- Silence semantics → mold T-12 (CRITERION-SPEC 0.6.1); originating note in the `no-subscription-trap` run-3 record.
+
+**Evidence:** `calibration/panel-2026-07-06/`. Not the formal gate; `human_calibration` stays 0.

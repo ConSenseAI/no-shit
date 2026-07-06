@@ -49,3 +49,17 @@ Deliberate-strict positions where both/either LLM rater logged instinct divergen
 - P-2's reworded seriality boundary (gap tolerance) — new wording, not yet re-probed.
 - Probe-script-dependent lanes: tenure-gated fabrication, time-bomb enrollment, defeat-device composition (design doc, Architecture §7 territory).
 - The formal §7.1 gate itself: ≥2 independent **human** adjudicators against a target **pre-registered before adjudication begins** (expected to mirror the sibling's: κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial pooled). This dry-run's 22/22 is evidence of operationalization quality, not a gate pass.
+
+## Run 2 — cross-vendor panel (Claude + GPT-5), full 46-row corpus, formal blinded packets (2026-07-06)
+
+**Method.** As the sibling's run 3: the formal adjudication kit (`../ADJUDICATION.md`), all 46 rows, id- and annotation-stripped, per-rater shuffled variants, §1–§5 excerpt only. First out-of-lineage rater (GPT-5, load-bearing); Claude is author-lineage, discounted.
+
+**Results.** **46/46 inter-rater (κ = 1.00); hard subset (n=15) 15/15; both raters 46/46 against the key; zero underdetermined** — including the 24 rows run 1 never saw.
+
+**Flags (no text changes).**
+
+- **S05 `adv-syn-first-layer-asymmetry`** — rater-1 instinct wants a caveat for a labeled, in-place one-expand; the strict check-6 rule applied as written. The §12 watch-item now carries cross-lineage rule-over-instinct evidence; the strict-vs-caveat policy question still goes to the human gate.
+- **S14 `bound-syn-variant-gated-consent`** — instinct wants fail; the `unobserved` arm's own exemplar governs. Applied cleanly.
+- Silence semantics → mold T-12 (CRITERION-SPEC 0.6.1); see the sibling's run-3 record for the originating note.
+
+**Evidence:** `calibration/panel-2026-07-06/`. Not the formal gate; `human_calibration` stays 0.

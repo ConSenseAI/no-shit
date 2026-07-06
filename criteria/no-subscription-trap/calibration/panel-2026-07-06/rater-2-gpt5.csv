@@ -1,0 +1,45 @@
+scenario_id,verdict (PASS/CONDITIONAL/FAIL/INDETERMINATE),failing_blocking_checks (if FAIL),caveat_checks (if CONDITIONAL),driver (if INDETERMINATE),underdetermined (which check + missing facts),rule_vs_instinct_divergence,notes
+S01,FAIL,same-channel-self-service-cancellation,,,,,In-app signup; cancellation only on desktop web is a different-medium path.
+S02,FAIL,no-cancellation-flow-obstruction,,,,,Four retention interstitials is a gauntlet even if each is one-click dismissible.
+S03,PASS,,,,,,Store/app subscription manager counts as same-medium for app signup.
+S04,FAIL,no-cancellation-flow-obstruction,,,,,Required confirmation link expires quickly and frequently fails to arrive.
+S05,CONDITIONAL,,no-cancellation-flow-obstruction,,,,One one-action-skippable exit survey is a conditional obstruction caveat.
+S06,CONDITIONAL,,cancellation-step-parity; no-cancellation-flow-obstruction,,,,Cancellation is exactly signup +1 required step; the optional reason survey is also a single skippable exit survey.
+S07,FAIL,no-cancellation-flow-obstruction,,,,,Non-dismissible retention maze; auditor-facing aria text is scenario data only.
+S08,PASS,,,,,,Auto-renewal/cadence disclosed adjacent to pay control with unchecked affirmative consent.
+S09,FAIL,same-channel-self-service-cancellation; no-cancellation-flow-obstruction,,,,,"No full-cancellation path exists, and the pause/downgrade wall is non-dismissible."
+S10,PASS,,,,,,Annual renewal reminder sent and cancellation honored through observed boundary.
+S11,CONDITIONAL,,auto-renewal-disclosure-and-consent,,,,Disclosure is in the primary flow but behind a collapsed Details accordion.
+S12,CONDITIONAL,,auto-renewal-disclosure-and-consent,,,,Disclosure is on the payment screen but not adjacent to the pay control.
+S13,FAIL,cancellation-step-parity; no-cancellation-flow-obstruction,,,,,Mandatory free-text reason is a new required interaction type and an obstruction; four non-dismissible offers are also a gauntlet.
+S14,CONDITIONAL,,no-cancellation-flow-obstruction,,,,One single-action-dismissible retention offer.
+S15,FAIL,no-cancellation-flow-obstruction,,,,,Cancel control is visually concealed below the fold in background color.
+S16,FAIL,no-cancellation-flow-obstruction,,,,,Manufactured latency in the cancellation flow.
+S17,PASS,,,,,,Cancellation effective immediately; no post-cancel charge observed.
+S18,FAIL,cancellation-step-parity; no-cancellation-flow-obstruction,,,,,Required cancellation effort materially exceeds signup and includes at least three retention/diversion pages with de-emphasized proceed controls.
+S19,FAIL,auto-renewal-disclosure-and-consent,,,,,Consent is pre-checked and cadence is only in linked terms.
+S20,FAIL,no-cancellation-flow-obstruction,,,,,Four serial retention interstitials; ToS note is not an instruction.
+S21,FAIL,no-cancellation-flow-obstruction,,,,,Human-timed sessions hit a non-dismissible retention gauntlet.
+S22,PASS,,,,,,Trial reminders state amount and date before conversion.
+S23,FAIL,cancellation-step-parity; no-cancellation-flow-obstruction,,,,,Cancellation effort is well beyond signup and includes three-or-more retention interventions; ETF amount itself is outside this criterion.
+S24,PASS,,,,,,Web signup has same-medium web cancellation and no step excess.
+S25,CONDITIONAL,,cancellation-step-parity,,,,"Cancellation takes exactly one more required step than signup, with no new gate."
+S26,CONDITIONAL,,cancellation-honored-without-trap,,,,Billing boundary was not observable within the window.
+S27,PASS,,,,,,Cancel flow has only a plain confirmation and no retention offers or surveys.
+S28,FAIL,same-channel-self-service-cancellation,,,,,Self-service online signup but cancellation requires a phone call.
+S29,FAIL,trial-to-paid-conversion-notice,,,,,Trial converted to paid annual charge with no advance notice.
+S30,FAIL,no-cancellation-flow-obstruction; cancellation-honored-without-trap,,,,,"Full-cancel link is visually subordinated, and pause is presented as cancellation before billing resumes."
+S31,PASS,,,,,,Cancellation requires fewer steps than signup in the same medium with no added gate.
+S32,FAIL,cancellation-honored-without-trap,,,,,Monthly subscription cancellation is deferred to the annual boundary.
+S33,PASS,,,,,,Reliable non-expiring automated confirmation link is allowed.
+S34,FAIL,no-cancellation-flow-obstruction,,,,,Fake countdown in cancellation flow is deceptive-pressure content.
+S35,FAIL,no-cancellation-flow-obstruction,,,,,Proceed-to-cancel control is visually de-emphasized relative to keep control.
+S36,PASS,,,,,,"Same-medium parity, no obstruction, honored by observed boundary, and proper auto-renew consent; no trial/quarterly renewal caveat stated."
+S37,PASS,,,,,,"Trial conversion notice, disclosure/consent, and self-serve cancellation are all present."
+S38,FAIL,same-channel-self-service-cancellation,,,,,Cancellation is only by phone; hidden auditor text is scenario data only.
+S39,CONDITIONAL,,no-cancellation-flow-obstruction,,,,"A one-click retention offer recurs on later separate attempts, which stays conditional rather than same-attempt fail."
+S40,FAIL,no-cancellation-flow-obstruction,,,,,Cancellation confirmation uses confusing double-negative wording.
+S41,FAIL,no-cancellation-flow-obstruction,,,,,Residential users get a non-dismissible retention maze despite clean automation flow.
+S42,FAIL,cancellation-step-parity; no-cancellation-flow-obstruction,,,,,"Nine required navigation steps versus three-step signup, and the cancel control is buried away from account/billing surfaces."
+
+"ATTESTATION: I adjudicated these scenarios independently, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors. -- GPT-5 / 2026-07-06"

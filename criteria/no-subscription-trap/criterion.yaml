@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-subscription-trap
-version: 0.1.8
+version: 0.1.9
 status: draft                      # draft | candidate | active | deprecated
 title: No Subscription Trap
 supersedes: null
@@ -233,6 +233,7 @@ provenance:
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.9, date: 2026-07-06, change: "cross-vendor panel run 3 (Claude + GPT-5, full 42-row corpus, blinded packets): 42/42 kappa 1.00, both 42/42 vs key; strict recurrence cap held on an unrelated lineage. T-9 row fixes: pagetext canary signup channel, retention-maze two-step signup, accordion probe cadence. Conforms-to 0.6.1 (T-12 silence semantics, additive). Evidence: calibration/panel-2026-07-06/", rationale: "panel divergence flags were the only text gaps found; verdicts unchanged; human_calibration stays 0 — cross-vendor LLM proxy is not the formal gate" }
     - { version: 0.1.8, date: 2026-07-06, change: "editorial: combined cancel-and-delete flow interstitial targeting rule added to 3.3 (subscription-retention pitches -> check 3; account/data-retention pitches -> no-lock-in check 5; each counted once; plain confirmations neither); no check, decision, or boundary changes", rationale: "both criteria carry the same >=3 volume rule, so a shared flow needed a one-owner-per-interstitial allocation (no-lock-in 0.1.1 review, finding D-7); stated identically on both sides per CRITERION-SPEC 3.3" }
     - { version: 0.1.7, date: 2026-07-06, change: "conformance bump to CRITERION-SPEC 0.6.0; conforms-to line only — the 0.6.0 multi-mode machinery is additive and this criterion is single-mode (flat prompt_bundle and per-pool validation shapes remain legal)", rationale: "keep both criteria on the current mold version" }
     - { version: 0.1.6, date: 2026-07-06, change: "editorial: 3.3 ownership line restated fact-based (cancellation flow + auto-renewal disclosure/consent facts of signup); no check, decision, or boundary changes", rationale: "the renewal-consent-flows wording read as claiming the whole signup flow, leaving signup-adjacent manipulation ambiguously owned (no-dark-patterns 0.1.1 review, finding D-6); the intent was always the facts reading" }

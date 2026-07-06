@@ -98,3 +98,20 @@ All seven T-8-touched rows now decide **literally** — medium-switch → FAIL(1
 - **v0.1.3 — done** (see second Re-probe): T-8 parity fixes validated 16/16 blind; the ≥3 gauntlet threshold behaved as decided but is a *new, engineered* boundary — stress it near the line (exactly three interstitials; mixed offer/survey/confirm compositions) in the next calibration round.
 - **v0.1.5 — not yet probed:** the reviewer-pass boundary changes (check 6's notice-content line — vague / missing amount-date / non-actionable lead time → FAIL; check 5's cadence-only-in-ToS FAIL and earlier-screen weak placement; check 3's trick-wording prong; check 2's channel-gated `na`) shipped without a fresh panel. Fold them into the next calibration round together with the ≥3-gauntlet stress items. Also queued from the re-verify pass: check 5's "clearly and conspicuously" is operationalized as placement only — an adjacent-but-illegible disclosure (tiny / low-contrast) is an untested lane predating v0.1.5; define legibility or route it to `conditional` in the same round.
 - **Formal §7.1 gate:** independent human adjudicators on a corpus that includes real (dated) products, not only synthetic fixtures — against the pre-registered target (κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial, fixed at v0.1.3).
+
+## Run 3 — cross-vendor panel (Claude + GPT-5), full 42-row corpus, formal blinded packets (2026-07-06)
+
+**Method.** First run on the formal adjudication kit (`../ADJUDICATION.md`): all 37 corpus rows plus all 5 ambiguity probes, id- and annotation-stripped to pure product facts, neutral IDs, per-rater shuffled variants, judged from the §1–§5 rule excerpt alone. First panel with a rater from **outside the authoring lineage** (GPT-5); rater 1 (Claude) shares the authoring lineage and its agreement is discounted accordingly (ADJUDICATION.md roster standards) — the GPT-5 column is the load-bearing one.
+
+**Results.** **42/42 inter-rater (κ = 1.00); hard subset (boundary+adversarial, n=11) 11/11; both raters 42/42 against the key; zero underdetermined verdicts.** The v0.1.5 boundaries run 2 never re-probed (check-6 notice content, check-5 cadence/placement, check-3 trick-wording, check-2 channel-`na`) all held blind, as did D-1/D-2/D-3's resolutions.
+
+**Flags → actions (0.1.9 + mold 0.6.1).**
+
+- **S01 convention note → mold T-12.** Both raters had to invent silence-vs-`unobserved` (and flagged that check 4's cascade has no `na` arm). Promoted to CRITERION-SPEC 0.6.1 §4.5: scenario silence is absence (`na`); `unobserved` only for observation gaps the row states. The 152/152 agreement across criteria meant the convention was shared, not stated.
+- **S38 `canary-syn-pagetext`** — signup channel unstated (T-9) → row states one-click online signup (0.1.9).
+- **S13 `viol-syn-retention-maze`** — signup steps unstated → row states two-step signup; the check-2 parity fail is now literally grounded (0.1.9).
+- **S11 `probe-accordion-disclosure`** — cadence-in-accordion unstated → stated (0.1.9); absent-entirely would be fail, not conditional.
+- **S23 `viol-adobe-etf`** — step-count vs interstitial separability: inherent enforcement-record coarseness; ruled on the stated "≥3 / well beyond" materiality. Noted, no fix.
+- **S39 `probe-persistent-offer`** — instinct-wants-fail on every-attempt recurrence; the separate-attempt cap applied as written. Watch-item stands for the human gate, now with cross-vendor evidence.
+
+**Evidence:** `calibration/panel-2026-07-06/` (roster + limits in its README). Not the formal gate; `human_calibration` stays 0.

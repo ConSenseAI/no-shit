@@ -1,7 +1,7 @@
 # `no-dark-patterns` — No Dark Patterns
 
-**Version:** 0.1.6 · **Status:** draft
-**Conforms to:** CRITERION-SPEC 0.6.0 (`../CRITERION-SPEC.md`)
+**Version:** 0.1.7 · **Status:** draft
+**Conforms to:** CRITERION-SPEC 0.6.1 (`../CRITERION-SPEC.md`)
 **Observation modes:** code + behavioral (every check is `either`-mode — see §4)
 
 ---
@@ -182,7 +182,7 @@ Seed corpus and provenance discipline live in `./corpus/public/README.md`. Rules
 
 - **draft → candidate:** run the **human-calibration gate** (CRITERION-SPEC §7.1): ≥2 independent adjudicators over the public corpus against the **pre-registered target, fixed at v0.1.4 (2026-07-06, after the first dry-run and before any human adjudication): Cohen's κ ≥ 0.8 aggregate AND ≥80% exact-verdict agreement on the boundary+adversarial subset pooled** — one metric, mirroring the sibling criterion's. Engineering dry-runs (blind LLM panels) preceded registration and do not consume the gate.
 
-**Calibration dry-run (proxy — not the formal §7.1 gate):** documented in `calibration-dryrun.md`. A blind, model-diverse Sonnet+Opus panel adjudicated 22 id-stripped scenarios (the §12 anchors plus five new probes) from §1–§5 alone: **22/22 inter-rater verdict agreement (κ = 1.00), both raters 22/22 against the authored key, zero underdetermined cases** — with rule-vs-instinct divergences logged exactly on the flagged strict positions (check 6 one-expand and persistence tolerance; check 8's cross-type aggregate; check 5's subordinated band). Two panel findings folded in at 0.1.3 (P-1 check-4↔5 ownership line; P-2 seriality wording). A real gate pass still needs independent human adjudicators; `human_calibration` stays `0`.
+**Calibration dry-run (proxy — not the formal §7.1 gate):** documented in `calibration-dryrun.md`. A blind, model-diverse Sonnet+Opus panel adjudicated 22 id-stripped scenarios (the §12 anchors plus five new probes) from §1–§5 alone: **22/22 inter-rater verdict agreement (κ = 1.00), both raters 22/22 against the authored key, zero underdetermined cases** — with rule-vs-instinct divergences logged exactly on the flagged strict positions (check 6 one-expand and persistence tolerance; check 8's cross-type aggregate; check 5's subordinated band). Two panel findings folded in at 0.1.3 (P-1 check-4↔5 ownership line; P-2 seriality wording). A second run — the first **cross-vendor** panel (Claude + GPT-5), over the **full 46-row corpus** as formally blinded packets (`calibration/panel-2026-07-06/`) — reached **46/46 (κ = 1.00), both raters 46/46 vs the key**, with check 6's strict no-conditional-band position and check 5's middle band held rule-over-instinct on an unrelated lineage. A real gate pass still needs independent human adjudicators; `human_calibration` stays `0`.
 - **candidate → active:** run the validation study (CRITERION-SPEC §7.2) on the **sealed** corpus for **each applicable model pool — both pools apply here**: this criterion is the code-audit keystone, so the enclave-contained pool is *not* n/a (unlike the purely behavioral sibling); the design doc's two-pool comparison lands on this criterion first. Publish cells per **(pool × mode artifact)** (CRITERION-SPEC §7.2, adopted at 0.6.0 from finding T-10): a code-mode attestation must resolve code-mode measured rates, not rates diluted across modes (§7.3's record-travels-with-the-claim principle). Kill thresholds: false-pass ≤ ~5%, false-flag ≤ ~10%; sealed set sized ≥ 3/ε per side (≥60 violating, ≥30 clean). Only then may attestations issue.
 
 ## 8. Claim language (§8)
@@ -224,6 +224,7 @@ Per CRITERION-SPEC §9 (0.6.0, adopted from finding **T-10** — §11): one audi
 - **first_active:** —
 - **delegation_inclusion_count / overturn_rate:** — (post-launch)
 - **Changelog:**
+  - `0.1.7` — cross-vendor panel folded in (run 2, 2026-07-06: Claude + GPT-5, full 46-row corpus, formal blinded packets): **46/46 (κ = 1.00), both raters 46/46 vs key, zero underdetermined**; check 6's strict no-conditional-band and check 5's middle band held rule-over-instinct on an unrelated lineage (the §12 watch-items stand, now with cross-vendor evidence). No check, decision, boundary, or corpus changes; conforms-to 0.6.1 (T-12 silence semantics, additive). Evidence: `calibration/panel-2026-07-06/`.
   - `0.1.6` — corpus README status prose synced to the record (2026-07-06): the file still described the dry-run as not yet run and the §7.1 target as unregistered; both predate it (dry-run at 0.1.3, target at 0.1.4). No row, check, decision, or label changes.
   - `0.1.5` — editorial (2026-07-06). `no-lock-in` is now authored: its relation re-tagged `overlaps` (it owns obstruction within export/deletion flows — the reciprocal this spec's non-goals always pointed at is now stated identically on both sides), and the unauthored-criteria framing narrowed to `transparent-pricing`/`no-surveillance`. No check, decision, boundary, or corpus changes.
   - `0.1.4` — §7.1 target pre-registered (2026-07-06): **κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial pooled**, recorded machine-readably in the manifest (`registered_at: 2026-07-06`). Registered after the first dry-run and before any human adjudication, per CRITERION-SPEC §7.1's stated-in-advance discipline; mirrors the sibling's target. No other changes.
@@ -241,7 +242,7 @@ Authoring the first **dual-mode** criterion surfaced two gaps in the mold — th
 
 ## 12. Calibration queue
 
-**First dry-run complete (2026-07-06, `calibration-dryrun.md`): 22/22 inter-rater, 22/22 vs key, zero underdetermined.** Every boundary below was probed except where marked; the list now records what each probe found and what remains for the formal §7.1 human gate:
+**First dry-run complete (2026-07-06, `calibration-dryrun.md`): 22/22 inter-rater, 22/22 vs key, zero underdetermined. Second run (cross-vendor, full 46-row corpus, 2026-07-06): 46/46 (κ = 1.00) — the strict positions below held on an unrelated lineage, logged again as rule-over-instinct; watch-items stand for the human gate.** Every boundary below was probed except where marked; the list now records what each probe found and what remains for the formal §7.1 human gate:
 
 - **Check 6 strictness** — PROBED, held: both blind raters ruled one-expand reject FAIL from the text (including a *labeled* expander), both logging it as rule-over-instinct. The policy question (strict line vs caveat) is now cleanly separated from text ambiguity and goes to the human gate; loosening stays free while `draft` (T-4 window).
 - **Check 5's three-band lane** — PROBED, placed cleanly from all three sides (pass/conditional/fail anchors); rater instinct flagged the middle band as harsh. Watch at the human gate.

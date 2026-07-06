@@ -1,6 +1,6 @@
 # Human-Calibration Adjudication — Instructions
 
-**Version:** 0.1.0 · **Status:** draft
+**Version:** 0.1.1 · **Status:** draft
 **Serves:** CRITERION-SPEC §7.1 — the human-calibration gate (draft → candidate) — for every criterion in this repository.
 
 Part I is written to be sent to adjudicators as-is, together with the per-criterion packet described in Part II. Part II is the coordinator's protocol: packet preparation, scoring, and recording. Nothing in this document reveals expected answers; blindness rests on the packet construction rules and the adjudicator commitments below.
@@ -25,7 +25,7 @@ That is your role. **You are grading the rules, not being graded.** A disagreeme
 ### Your task, per scenario
 
 1. **Treat the scenario text as the complete, established fact set.** What it states happened, happened; what it does not state is not there to be assumed. Do not fill in charitable or suspicious details.
-2. **Apply each check's decision rule exactly as written** to the facts. Each check resolves to one of the outcomes the rules define (pass / conditional / fail / unobserved / not-applicable, as the rule text specifies). If the scenario says nothing bearing on a check, resolve that check per the rules' not-applicable / unobserved definitions — the aggregation rule handles those.
+2. **Apply each check's decision rule exactly as written** to the facts. Each check resolves to one of the outcomes the rules define (pass / conditional / fail / unobserved / not-applicable, as the rule text specifies). If the scenario says nothing bearing on a check, that check is **not applicable** to this scenario — the scenario is a complete fact set, and silence is absence (CRITERION-SPEC §4.5, T-12). Reserve *unobserved* for observation gaps the scenario itself states (a window that closed before a boundary; an artifact not yet delivered). The aggregation rule handles both.
 3. **Apply the verdict aggregation rule** to reach one verdict: **PASS / CONDITIONAL / FAIL / INDETERMINATE.**
 4. **Enumerate:** for a FAIL, list *every* failing blocking check, not just the first you found. For a CONDITIONAL, name the check(s) generating the caveat. For an INDETERMINATE, name what was unobserved or inapplicable that drove it.
 
@@ -74,10 +74,20 @@ From the criterion's public corpus (`corpus/public/README.md`), for each row:
 - Rule gaps and row bugs become versioned SPEC/corpus fixes with changelog entries. Material changes to checks or decision arms re-trigger the gate per CRITERION-SPEC §7.1's discipline; wording errata do not.
 - **Pass** → the criterion meets the §7.1 leg of the candidate gate (CRITERION-SPEC §2.3 lists the rest). **Fail** → back to the checks; the fix is sharper rules, not better raters, and the result is published either way — divergence logs, underdetermined flags, and the disagreement classification included, as a calibration record alongside the dry-runs.
 
+### Roster, record & publication standards
+
+Every round — engineering dry-run or formal gate — publishes, once scoring is complete:
+
+- **Roster**, per adjudicator: identity (name, or model + version + vendor), access route (which product/API ran a model rater), packet variant, date, coordinator, and any disclosures (anything seen beyond the packet). For model raters, a **lineage note**: whether the lineage overlaps the criterion's authoring model(s) — author-lineage raters are recorded as such and their agreement discounted in interpretation; the lineage-independent rater carries the evidential weight.
+- **Files:** the packet(s), the neutral-ID mapping, the verbatim response sheets (attestations included), and the scoring output.
+- **Gaps recorded, not papered over:** any roster field not captured at run time is published as "not recorded."
+- **Blinding burn:** a published mapping burns those shuffles — any later round MUST regenerate packets with fresh seeds.
+
 ### Recruiting notes
 
 Adjudicators must be independent — not authors of any criterion, no stake in the outcome, no prior exposure to the corpus labels — and mutually independent (not a pair who will compare notes). The task needs careful reading of normative text, not domain credentials: product, UX-research, QA, legal-adjacent, or engineering backgrounds all work. ≥2 required; 3 gives κ resilience if one submission is unusable.
 
 ## Changelog
 
+- **0.1.1** (2026-07-06) — the silence instruction in Part I now cites the mold rule it lacked (CRITERION-SPEC §4.5 T-12 — scenario silence is absence; *unobserved* only for stated observation gaps): the first cross-vendor panel had to invent that convention, which is exactly the gap class this document exists to close. Part II gains **roster, record & publication standards**, written after that panel's roster metadata was under-captured (one rater's packet variant and access route: not recorded).
 - **0.1.0** (2026-07-06) — initial draft: adjudicator-facing instructions (Part I) and coordinator protocol (Part II), codifying the dry-runs' method (id-stripping, §1–§5 rule excerpt, rule-vs-instinct logging, underdetermined flags, corrected-key discipline) for the formal human gates. Written with all three Stage 0 targets registered and no gate yet run.

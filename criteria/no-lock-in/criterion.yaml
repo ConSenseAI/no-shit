@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-lock-in
-version: 0.1.4
+version: 0.1.5
 status: draft                      # draft | candidate | active | deprecated
 title: No Lock-In
 supersedes: null
@@ -429,6 +429,7 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.5, date: 2026-07-06, change: "cross-vendor panel run 2 (Claude + GPT-5, full 64-row corpus, blinded packets): 64/64 kappa 1.00, both 64/64 vs key. Watch-list combined-flow targeting question surfaced as predicted on bound-syn-single-offer; row now states pitch target + no-subscription-pitch (targeting rule literally decidable). Conforms-to 0.6.1 (T-12, additive). Evidence: calibration/panel-2026-07-06/", rationale: "one row-fact sharpening, no decision changes; the watch-list predicted exactly where ambiguity would surface — the calibration machinery working; human_calibration stays 0" }
     - { version: 0.1.4, date: 2026-07-06, change: "corpus README status prose synced (dry-run recorded at 0.1.2, 7.1 target registered at 0.1.3 — the README still described both as pending); no row, check, decision, or label changes", rationale: "public record consistency; the registration commit touched SPEC and manifest but missed the corpus README's status narration" }
     - { version: 0.1.3, date: 2026-07-06, change: "7.1 human-calibration target pre-registered: Cohen's kappa >= 0.8 aggregate AND >=80% exact-verdict on boundary+adversarial pooled (registered_at 2026-07-06); gate item selection bound to the section-11 watch-list; no other changes", rationale: "stated-in-advance discipline (CRITERION-SPEC 7.1) — registered after the first dry-run, before any human adjudication; mirrors both siblings' targets" }
     - { version: 0.1.2, date: 2026-07-06, change: "first calibration dry-run folded in (calibration-dryrun.md): blind Sonnet+Opus panel, 23 scenarios covering every 0.1.1 boundary — 23/23 inter-rater (kappa = 1.00), both 23/23 vs corrected key, zero underdetermined; panel outperformed the key twice (errata recorded). P-1: covered data includes derivative representations (transcripts/previews/indexes). P-2: downgrade-hostage enumerates checks 1 AND 3 (row relabeled). Section 11 rewritten to probed status", rationale: "operationalization evidence at dry-run scale; combined-flow targeting rule and extended check-6 scope held under blindness; human_calibration stays 0" }
