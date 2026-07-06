@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-dark-patterns
-version: 0.1.0
+version: 0.1.1
 status: draft                      # draft | candidate | active | deprecated
 title: No Dark Patterns
 supersedes: null
@@ -11,8 +11,8 @@ guarantee: >
   show you real information and honest controls. No fabricated countdowns,
   stock counts, or activity feeds; no shame-worded or trick-worded choices;
   no hidden or disguised options; declining is as easy as accepting; nothing
-  is added to your order or account without your explicit choice; and
-  declined prompts stay declined.
+  is added to your order or account without your explicit choice; and a "no"
+  is remembered, not worn down.
 
 harm_model: >
   Manipulation at the decision moment; a credence good whose deferral runs
@@ -28,9 +28,10 @@ harm_model: >
 scope:
   covers:
     - "truthfulness of pressure signals on choice surfaces: urgency (countdowns, deadlines), scarcity (stock/demand claims), social proof (activity feeds, testimonials, aggregates)"
-    - "wording, semantics, and visual presentation of accept/decline controls; consent and permission prompts; defaults and pre-selections"
+    - "wording, semantics, and visual presentation of accept/decline controls; consent and permission prompts; defaults, pre-selections, decline persistence, and consent withdrawal"
     - "order/account integrity: what is added versus what was affirmatively chosen"
     - "recurrence of declined prompts"
+    - "product-originated notifications (email/push/in-app) that present offers or choices"
   non_goals:
     - "cancellation flows and the auto-renewal disclosure/consent facts of signup -> no-subscription-trap (owner; reciprocal exclusion)"
     - "price honesty and completeness (drip pricing, hidden fees, price framing) -> transparent-pricing"
@@ -38,11 +39,13 @@ scope:
     - "data export and account deletion (including deletion-flow obstruction) -> no-lock-in"
     - "advertising/content claims beyond the enumerated interface pressure signals (deception law's domain, not choice architecture)"
     - "engagement-maximizing design as such (infinite scroll, autoplay, streaks) — needs its own harm model; candidate future criterion"
+    - "forced enrollment beyond bundled optional consents (e.g., account-required-to-purchase); the bundled-consent instance is check choice-symmetry's"
+    - "comparison prevention -> transparent-pricing"
   related:
-    - { id: no-subscription-trap, relation: overlaps }   # they own dark patterns within cancellation + renewal-consent flows; this criterion excludes that surface
-    - { id: transparent-pricing, relation: complements }
-    - { id: no-lock-in, relation: complements }
-    - { id: no-surveillance, relation: complements }     # future criterion: data-practice substance behind the consent interfaces policed here
+    - { id: no-subscription-trap, relation: overlaps }   # they own the cancellation flow + the auto-renewal disclosure/consent FACTS of signup (fact-based boundary, both specs identical as of their 0.1.6); everything else in signup is this criterion's
+    - { id: no-surveillance, relation: overlaps }        # future: this criterion owns consent-INTERFACE manipulation; no-surveillance owns data-practice substance and MUST exclude the interface when authored
+    - { id: transparent-pricing, relation: complements } # MUST exclude was-the-addition-chosen facts (check no-unconsented-additions') when authored
+    - { id: no-lock-in, relation: complements }          # MUST exclude decline/withdrawal obstruction outside deletion/export when authored
 
 observation_modes: [ code, behavioral ]   # union over checks; every check is either-mode (SPEC §4)
 
@@ -50,10 +53,13 @@ observation_modes: [ code, behavioral ]   # union over checks; every check is ei
 # offer, or selectable-option surface) => every blocking check `na` =>
 # INDETERMINATE, never a vacuous PASS (CRITERION-SPEC §4.4; SPEC §3).
 #
-# Mode-join rule (both modes run in one audit): evidence union, not vote —
-# a check fails if EITHER mode establishes a fail shape; passes only when
-# every mode that ran completed its falsification procedure clean. Neither
-# mode exonerates the other. (SPEC §4; mold finding T-11, SPEC §11.)
+# Mode-join rule (both modes run in one audit) — a total lattice, not a vote
+# (SPEC §4; mold finding T-11, SPEC §11):
+#   decided outcomes join worst-of: fail > conditional > pass (evidence union,
+#   never exoneration); a check decided in ANY mode is decided — unobserved in
+#   the other mode never downgrades it; unobserved survives only if every mode
+#   that ran returned it; na joins only with na. Confidence: per-check
+#   evidence_completeness = max over modes run.
 
 checks:
   - id: no-false-urgency-or-scarcity
@@ -66,11 +72,12 @@ checks:
       communicated about the material decision is false.
     keyword: MUST_NOT
     modes: [ either ]
-    evidence: [ source_ref, dom_snapshot, screenshot, flow_transcript, har_capture ]
+    evidence: [ source_ref, dom_snapshot, screenshot, flow_transcript, har_capture, notification_record ]
     procedure: >
-      Inventory urgency/scarcity signals on covered surfaces. CODE: trace each
-      displayed value to its source (server-supplied state vs client-side
-      generation — RNG, constants, per-load seeds). BEHAVIORAL: revisit across
+      Inventory urgency/scarcity signals on covered surfaces, including
+      captured product-originated notifications. CODE: trace each displayed
+      value to its source (server-supplied state vs client-side generation —
+      RNG, constants, per-load seeds). BEHAVIORAL: revisit across
       sessions/identities and past the stated expiry; record whether the timer
       resets, the offer survives its own deadline, or counts regenerate.
     decision: >
@@ -100,21 +107,30 @@ checks:
       suppressing negative entries while presenting the remainder as the whole.
     keyword: MUST_NOT
     modes: [ either ]
-    evidence: [ source_ref, har_capture, dom_snapshot, flow_transcript, screenshot ]
+    evidence: [ source_ref, har_capture, dom_snapshot, flow_transcript, screenshot, notification_record ]
     procedure: >
-      Inventory social-proof elements. CODE: trace displayed events/aggregates
-      to their source; flag client-side generation and filtered aggregation.
-      BEHAVIORAL: compare feeds across fresh identities and sessions; cross-check
-      displayed aggregates against enumerable detail (review counts vs listed
-      reviews).
+      Inventory social-proof elements, including those in captured
+      product-originated notifications. CODE: trace displayed
+      events/aggregates to their source; flag client-side generation,
+      filtered aggregation, and operator-side configuration of third-party
+      display thresholds. BEHAVIORAL: compare feeds across fresh identities
+      and sessions; cross-check displayed aggregates against enumerable
+      detail (review counts vs listed reviews).
     decision: >
-      ordered cascade, first match wins (§4.6):
+      ordered cascade, first match wins; fail precedes unobserved — a
+      permitted §4.6 deviation: suppression/mismatch shapes are decidable
+      from captured evidence even when full verification is not:
       na if no social-proof elements on covered surfaces;
-      unobserved if elements present but neither source tracing nor
-      cross-session falsification was possible within the window;
       fail if a signal is fabricated (generated events, invented testimonials)
       or a displayed aggregate misrepresents the underlying data (negatives
       suppressed from an aggregate presented as complete);
+      unobserved if elements present but not falsifiable within the window
+      (no source tracing or cross-session comparison possible), OR the
+      aggregate's composition is operator-controlled (configurable
+      third-party widget with display thresholds) and completeness cannot be
+      verified in any mode run — unverifiable curated aggregates are partial
+      scope, never a silent pass (plain uncontrolled third-party embeds are
+      not, by themselves, unverifiable);
       conditional if signals are drawn from real data but framed to mislead at
       the margin (real events presented with false recency — days-old orders
       replayed as "just bought");
@@ -125,26 +141,32 @@ checks:
   - id: no-confirmshaming
     statement: >
       On covered surfaces, declining an offer, enrollment, or consent MUST NOT
-      require selecting a control worded to shame, belittle, or guilt the
-      decliner — whether by self-disparagement or by editorializing the
-      decline as harmful or foolish.
+      require selecting a control worded or depicted to shame, belittle, or
+      guilt the decliner — by self-disparagement, by editorializing the
+      decline as harmful or foolish, or by shame-laden imagery attached to
+      the decline path.
     keyword: MUST_NOT
     modes: [ either ]
-    evidence: [ screenshot, dom_snapshot, source_ref ]
+    evidence: [ screenshot, dom_snapshot, source_ref, notification_record ]
     procedure: >
-      Inventory offer/consent prompts on covered surfaces; capture the exact
-      wording of each decline control and its immediate framing.
+      Inventory offer/consent prompts on covered surfaces, including captured
+      product-originated notifications; capture the exact wording and visual
+      depiction of each decline control and its immediate framing.
     decision: >
       ordered cascade, first match wins (§4.6):
       na if no prompts with an accept/decline choice on covered surfaces;
       unobserved if such prompts exist but their decline controls could not be
       captured within the window;
-      fail if any decline control is shame-worded (self-disparaging, or
-      editorializing the decline as harmful/foolish/shameful);
-      conditional if decline controls are neutrally worded but the prompt's
-      surrounding copy leans on guilt- or fear-framing aimed at the decliner
-      while both options remain neutrally labeled;
-      pass otherwise (declining available through neutrally worded controls).
+      fail if any decline control is shame-worded or shame-depicted
+      (self-disparaging; editorializing the decline as harmful/foolish/
+      shameful; shame-laden imagery on the decline path);
+      conditional if decline controls are neutrally worded and depicted but
+      the prompt's surrounding copy or imagery leans on emotive or
+      judgment-laden loss framing BEYOND factual consequence, while both
+      options remain neutrally labeled;
+      pass otherwise (neutral controls; consequence statements factual —
+      a stated factual, specific consequence of declining is not
+      confirmshaming and does not trigger the conditional band).
     severity: blocking
 
   - id: no-trick-wording
@@ -152,9 +174,10 @@ checks:
       Choice controls on covered surfaces MUST NOT carry wording or semantics
       that invert or materially misstate their effect: double negatives,
       label polarity reversed relative to effect, mixed opt-in/opt-out
-      semantics within one form engineered to confuse, or action controls
-      whose label materially misstates what they do — including controls that
-      place a charge or commitment without saying so.
+      semantics within one form engineered to confuse, inconsistent mappings
+      of the same control to different effects across adjacent contexts, or
+      action controls whose label materially misstates what they do —
+      including controls that place a charge or commitment without saying so.
     keyword: MUST_NOT
     modes: [ either ]
     evidence: [ dom_snapshot, source_ref, screenshot, flow_transcript ]
@@ -168,13 +191,15 @@ checks:
       na if no choice controls on covered surfaces;
       unobserved if controls exist but their effects could not be established
       within the window (not exercisable, no code access);
-      fail if any control's wording inverts or materially misstates its
-      effect — a double negative or reversed polarity governing a
-      consent/enrollment; adjacent controls mixing opt-in and opt-out
-      semantics such that a consistent reading produces the wrong result; or
-      an action control effecting a charge/commitment its label does not
-      state;
-      pass otherwise (labels state effects plainly; polarity consistent).
+      fail if any control's wording or semantics invert or materially misstate
+      its effect, including (non-exhaustive; the umbrella predicate governs):
+      a double negative or reversed polarity governing any covered choice
+      control; adjacent controls mixing opt-in and opt-out semantics such
+      that a consistent reading produces the wrong result; the same control
+      mapped to materially different effects in adjacent contexts; or an
+      action control effecting a charge/commitment its label does not state;
+      pass otherwise (labels state effects plainly; polarity and mappings
+      consistent).
     severity: blocking
 
   - id: no-visual-interference
@@ -201,48 +226,74 @@ checks:
       unobserved if such surfaces exist but rendered presentation could not be
       captured within the window;
       fail if an available option is concealed (near-invisible contrast/size,
-      positioned where a user would not reasonably find it, or occluded) or an
-      interactive element is disguised as content or system UI;
+      positioned where a user would not reasonably find it, or occluded); an
+      interactive element is disguised as content or system UI; or displayed
+      selection/progress state contradicts the actual state (a toggle
+      rendered on while off; a plan highlighted as selected that was not
+      chosen);
       conditional if the disfavored option is legible and discoverable in-flow
       but materially subordinated (small plain text-link against a large
       accent button) — visible, but styled to be overlooked;
       pass otherwise (competing options presented with ordinary emphasis
-      differences at most — both legible, discoverable, presented as controls).
+      differences at most — both legible, discoverable, presented as
+      controls — and rendered state matches actual state).
     severity: blocking
 
   - id: choice-symmetry
     statement: >
       Where a covered surface asks the user to accept or decline something
       optional (a data/marketing consent, a permission, an optional add-on or
-      enrollment), declining MUST be available with parity: reachable in no
-      more user actions than accepting, present on the same surface where
-      acceptance is offered, and never pre-selected toward acceptance.
+      enrollment; optional judged NORMATIVELY — a choice that could lawfully
+      or functionally be declined while still obtaining the underlying
+      product, regardless of how it is presented), declining MUST be
+      available with parity: reachable in no more user actions than
+      accepting, present on the same surface where acceptance is offered, and
+      never pre-selected toward acceptance. Parity extends over the choice's
+      lifecycle: a decline MUST be persisted no less durably than an
+      acceptance, and withdrawing a granted consent MUST NOT require more
+      actions than granting it did.
     keyword: MUST
     modes: [ either ]
     evidence: [ flow_transcript, step_count, dom_snapshot, screenshot, source_ref ]
     procedure: >
-      Inventory optional accept/decline prompts on covered surfaces. For each:
-      count minimum user actions to complete acceptance and declination;
-      record whether decline is present on the first surface or requires
-      navigation; record default states of consent/add-on controls.
+      Inventory optional accept/decline prompts on covered surfaces (optional
+      judged normatively). For each: count minimum user actions to complete
+      acceptance and declination; record whether decline is present on the
+      first surface or requires navigation; record default states of
+      consent/add-on controls. Record how each choice is persisted (CODE:
+      cookie/flag TTLs and re-trigger conditions for accepted vs declined
+      states). Where a consent was granted, exercise withdrawal and count its
+      actions against the grant's.
     decision: >
       ordered cascade, first match wins (§4.6):
-      na if no optional accept/decline prompts on covered surfaces;
+      na if no normatively optional accept/decline prompts on covered
+      surfaces;
       unobserved if prompts exist but the decline path could not be exercised
       or counted within the window (e.g., variant-gated);
       fail if declining requires more actions than accepting (including
       exactly one more — reject behind an expander or second layer when accept
-      is one action), or decline is absent from the surface where acceptance
-      is offered, or the optional choice is pre-selected toward acceptance;
+      is one action); or decline is absent from the surface where acceptance
+      is offered (a consent wall for a normatively optional purpose is this
+      shape); or the optional choice is pre-selected toward acceptance; or
+      the declined state is persisted less durably than the accepted state
+      (decline honored but re-asked while acceptances persist — TTL/flag
+      asymmetry); or withdrawal of a granted consent requires more actions
+      than the grant did;
       pass otherwise (decline available in actions <= accept, same surface,
-      defaults neutral or off).
+      defaults neutral or off, declines persisted with parity, withdrawal no
+      harder than grant).
     severity: blocking
     # Deliberately strict, no conditional band (SPEC §4 check 6, §12):
     # CCPA §7004 symmetry / CNIL decisions; loosening is free while draft
-    # (T-4 window) if calibration demands. Structural facts only — visual
-    # styling of the same prompt is check 5's; wording is checks 3/4's.
-    # The auto-renewal consent control at signup is no-subscription-trap
-    # check 5's; a marketing checkbox on the same screen is this check's.
+    # (T-4 window) if calibration demands. Lifecycle prongs (v0.1.1):
+    # persistence parity = structural, code-decidable (pairs with check 8,
+    # which owns re-prompt frequency); withdrawal parity = GDPR Art. 7(3)
+    # made countable — consent WITHDRAWAL owned here; subscription
+    # cancellation stays no-subscription-trap's, account deletion
+    # no-lock-in's. Structural facts only — visual styling of the same
+    # prompt is check 5's; wording is checks 3/4's. The auto-renewal consent
+    # control at signup is no-subscription-trap check 5's; a marketing
+    # checkbox on the same screen is this check's.
 
   - id: no-unconsented-additions
     statement: >
@@ -250,7 +301,10 @@ checks:
       user's order or account without an affirmative choice: no sneaking items
       into a cart; no bundling an unrelated enrollment silently into another
       action; no charging an interaction that was not presented as a purchase
-      or commitment.
+      or commitment; and no charge-committing control engineered for
+      inadvertent activation (adjacency to unrelated controls, layout shift
+      under the pointer, single-press charging from a browsing or loading
+      context — with no confirmation step).
     keyword: MUST_NOT
     modes: [ either ]
     evidence: [ flow_transcript, screenshot, dom_snapshot, notification_record, source_ref, har_capture ]
@@ -266,8 +320,11 @@ checks:
       or read within the window (e.g., payment stage not exercisable);
       fail if anything appears in the order or account the user never
       affirmatively selected — a silently added line item, an enrollment
-      bundled unstated into an unrelated action, or a charge triggered by an
-      interaction not presented as a purchase/commitment;
+      bundled unstated into an unrelated action, a charge triggered by an
+      interaction not presented as a purchase/commitment, or a
+      charge-committing control engineered for inadvertent activation
+      (adjacency/layout-shift/single-press-from-browsing, no confirmation),
+      whether or not a mis-hit was observed in the window;
       conditional if the addition was disclosed on the committing surface but
       not separately choosable (a stated extra bundled into a single
       "Continue" with no independent opt-out control);
@@ -299,17 +356,23 @@ checks:
       declined during observation;
       unobserved if prompts were declined but the window was too short to
       observe recurrence;
-      fail if a declined prompt re-presents within the same session, or three
-      or more times across the observation window, or a re-presentation blocks
-      task progress until re-answered;
-      conditional if a declined prompt re-presents exactly twice across the
-      window (persistent, at the tolerance edge);
+      fail if a declined prompt re-presents within the same session; or a
+      declined prompt type re-presents three or more times across the
+      observation window; or total re-presentations of declined prompts
+      across all types reach four or more in the window (the type-carousel
+      shape); or a re-presentation blocks task progress until re-answered;
+      conditional if a declined prompt type re-presents exactly twice across
+      the window and the cross-type total stays under four (persistent, at
+      the tolerance edge);
       pass otherwise (declined prompts stay dismissed for the session and
-      reappear at most once across the window).
+      reappear at most once each, fewer than four total, across the window).
     severity: caveat
-    # Counting unit is the prompt TYPE. Thresholds are first-draft values,
-    # queued for calibration (SPEC §12). As caveat severity, fail here
-    # contributes CONDITIONAL, never FAIL.
+    # Counting unit is the prompt TYPE; counts denominated per 14-day window
+    # (normalize pro rata; re-fixes when the probe script standardizes).
+    # Mode note: CODE decides same-session and task-blocking arms
+    # structurally; per-window count arms are behavioral. Thresholds are
+    # first-draft values, queued for calibration (SPEC §12). As caveat
+    # severity, fail here contributes CONDITIONAL, never FAIL.
 
 aggregation:                       # CRITERION-SPEC §4.4 defaults, checks 1–7 blocking, check 8 caveat
   pass_if:          "all blocking checks (1-7) pass (na excluded, and at least one blocking check applied — §4.4); no check conditional; check 8 pass, na, or unobserved"
@@ -324,7 +387,9 @@ confidence:                        # §5.3
   method: >
     min over contributing checks of (model_agreement x evidence_completeness),
     where evidence_completeness reflects how much of each check's
-    falsification procedure completed in the mode(s) run.
+    falsification procedure completed in the mode(s) run; per check,
+    completeness is the max over modes that ran (a second mode never reduces
+    it — the join analogue of the mode-join lattice).
   bands: { high: ">=0.90", medium: ">=0.70 and <0.90", low: "<0.70 -> INDETERMINATE + review" }
 
 corpus:                            # §6
@@ -362,10 +427,11 @@ provenance:                        # §10
     - "Gray et al., The Dark (Patterns) Side of UX Design (CHI 2018)"
     - "FTC Staff Report, Bringing Dark Patterns to Light (2022)"
     - "OECD, Dark Commercial Patterns (2022)"
-    - "FTC v. Epic Games (2022-2023) — public record"
-    - "FTC v. Fashion Nova (2022) — public record"
-    - "CNIL SAN-2022-003 (Google) / SAN-2022-004 (Facebook), Jan 2022 — public record"
-    - "European Commission / CPC — Booking.com commitments (2019-2020); CPC dark-pattern sweep (2023)"
+    - "In the Matter of Epic Games, Inc. (FTC, 2022-2023) — public record"
+    - "In the Matter of Fashion Nova, LLC (FTC, 2022) — public record"
+    - "CNIL SAN-2021-023 (Google) / SAN-2021-024 (Facebook), deliberations 31 Dec 2021, announced Jan 2022 — public record"
+    - "European Commission / CPC — Booking.com commitments (announced Dec 2019, deadline June 2020, confirmed Dec 2020); CPC dark-pattern sweep (2023)"
+    - "GDPR Art. 7(3) — withdrawal-parity anchor (check choice-symmetry)"
     - "EDPB Cookie Banner Taskforce report (2023)"
     - "CCPA regulations, 11 CCR §7004 (symmetry in choice)"
     - "EU Digital Services Act Art. 25; UCPD guidance (2021/C 526/01)"
@@ -374,4 +440,5 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.1, date: 2026-07-06, change: "review pass (blind domain/adversarial reviewer + inline conformance adjudication of all rows). Blocking T-8 fix: check no-visual-interference fail arm covers misrepresented selection state (+viol-syn-fake-selected-state). no-confirmshaming: conditional arm qualified to emotive/judgment-laden loss framing BEYOND factual consequence (+clean-syn-factual-consequence); shaming covers depiction (+adv-syn-emoji-shame). no-trick-wording: fail enumeration non-exhaustive + de-narrowed; inconsistent same-control mappings added (Epic row now literal). choice-symmetry: optional defined normatively (+viol-syn-consent-wall); lifecycle parity — decline persistence (+viol-syn-reject-resets) and consent withdrawal (+viol-syn-unsubscribe-maze, GDPR 7(3)). no-unconsented-additions: inadvertent-activation shape (Epic mis-hit lane). no-fabricated-social-proof: operator-controlled unverifiable aggregates -> unobserved; fail-before-unobserved (permitted 4.6 deviation). no-nagging-after-decline: cross-type aggregate arm >=4 (+bound-syn-prompt-carousel); 14-day denomination. Covered surfaces include product-originated notifications; checks 1-3 gain notification_record. Mode-join restated as total lattice (decided beats unobserved; worst-of decided; na joins na); T-10 extended to per-(pool x mode) validation cells; confidence completeness = max over modes. Ownership with no-subscription-trap restated fact-based (their 0.1.6); reciprocal MUST-excludes for unauthored criteria; no-surveillance relation -> overlaps; forced-enrollment + comparison-prevention non-goals. Corpus 39->46; CNIL dockets corrected (SAN-2021-023/-024); Booking dates precise; FTC captions In-the-Matter-of; guarantee tail softened", rationale: "one blocking statement<->decision gap (T-8), one internal contradiction on the highest-frequency clean shape, wrong enforcement dockets, and a mode-join edge where both-modes audits yielded weaker verdicts than single-mode — all verified against file text before fixing; cheap evasion lanes closed now (notifications, depiction, persistence, mis-hit engineering, type-carousel, unverifiable aggregates), the rest queued to SPEC §12; boundary moves permitted pre-active (T-4/T-7); every new shape carries a corpus anchor; none probed yet" }
     - { version: 0.1.0, date: 2026-07-06, change: "initial draft — eight checks, dual-mode (every check either); scope drawn against no-subscription-trap / transparent-pricing / no-surveillance / no-lock-in; strict check-6 opening position; mold findings T-10 (dual-artifact binding) and T-11 (mode-join rule) recorded", rationale: "first multi-mode criterion — the design doc's keystone test of code-audit judgment; authored to stress the mold's per-check modes machinery the way no-subscription-trap stressed its single-mode shape" }
