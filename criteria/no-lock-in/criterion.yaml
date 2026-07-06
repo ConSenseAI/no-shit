@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-lock-in
-version: 0.1.0
+version: 0.1.1
 status: draft                      # draft | candidate | active | deprecated
 title: No Lock-In
 supersedes: null
@@ -47,43 +47,59 @@ observation_modes: [ behavioral ]  # single-mode: deletion honoring, export cont
 
 # Applicability: no persistent account AND no user-contributed/account data
 # => every blocking check `na` => INDETERMINATE, never a vacuous PASS
-# (CRITERION-SPEC §4.4; SPEC §3). Tier note: checks apply at whichever tier
-# the probe exercises (individual or org admin); "current tier" = data
-# created on a tier exports on that tier, unpaywalled.
+# (CRITERION-SPEC §4.4; SPEC §3). Tier note (reworded 0.1.1, D-3): checks
+# apply at whichever tier the probe exercises (individual or org admin),
+# and the claim states which; "current tier" = ALL data the account holds
+# exports on the account's current tier regardless of where it was created,
+# unpaywalled — no upgrade-to-export-your-archive.
 
 checks:
   - id: self-service-export
     statement: >
       A user MUST be able to obtain an export of their contributed content
-      and account data via self-service, on the tier where the data was
-      created, at no additional charge — not gated on a human-mediated
-      channel, not gated behind a paid upgrade or data-egress fee.
-      Asynchronous preparation with stated completion is self-service; a
-      reliable automated delivery step is allowed — an unreliable or
-      quickly-expiring one is obstruction (check no-exit-flow-obstruction).
+      and account data via self-service, covering ALL data the account holds
+      on its current tier (regardless of the tier where it was created), at
+      no additional charge — not gated on a human-mediated channel, not
+      gated behind a paid upgrade or data-egress fee. Automated asynchronous
+      preparation is self-service when its stated completion is timely
+      (<= 30 days, GDPR Art. 12(3) anchor); a reliable automated delivery
+      step is allowed. Unreliable, expiring, or non-delivering mechanics —
+      including a stated completion that elapses with no artifact — and
+      item-by-item-only export are obstruction (check
+      no-exit-flow-obstruction).
     keyword: MUST
     modes: [ behavioral ]
     evidence: [ flow_transcript, screenshot, dom_snapshot, notification_record, har_capture ]
     procedure: >
-      On an account holding contributed data on its current tier, locate and
-      exercise the export path end-to-end using only self-service controls;
-      record any human-mediated gate, upgrade/paywall gate, or charge;
-      record delivery mechanics and stated completion expectations.
+      On an account holding contributed data (including data created on a
+      prior/higher tier where the fixture provides it), locate and exercise
+      the export path end-to-end using only self-service controls; record
+      any human-mediated gate, upgrade/paywall gate, or charge; record
+      whether preparation is automated or staff-fulfilled, the stated
+      completion, and actual delivery within the window.
     decision: >
       ordered cascade, first match wins (§4.6):
       na if the account holds no user-contributed or account data to export;
       unobserved if account/settings surfaces could not be reached or the
-      flow could not be exercised within the window;
+      flow could not be exercised within the window, OR an export was
+      initiated, its stated completion has not yet elapsed, and no artifact
+      arrived before the window closed (pending, not judged);
       fail if no export path exists, or export is available only through a
-      human-mediated channel, or export of data created on the current tier
-      is gated behind a paid upgrade or an additional charge (egress-fee
-      shape);
+      human-mediated channel, or export of ANY data the account holds is
+      gated behind a paid upgrade or an additional charge (egress-fee and
+      upgrade-to-export-your-archive shapes), or the stated completion
+      exceeds 90 days;
       conditional if initiation is self-service but completion is
-      human-mediated with no stated timeframe;
-      pass otherwise (self-service initiation and delivery on the current
-      tier at no charge; async-with-stated-completion and reliable automated
-      delivery are fine).
+      human-mediated (staff-prepared or staff-delivered), with or without a
+      stated timeframe, OR preparation is automated but stated completion
+      exceeds 30 days (and is <= 90);
+      pass otherwise (self-service initiation, automated delivery of all
+      current-tier-held data at no charge, immediate or stated <= 30 days).
     severity: blocking
+    # 30/90-day lines: first-draft values anchored to GDPR Art. 12(3),
+    # queued for calibration (SPEC §11). Elapsed-non-delivery, expiring
+    # links, per-item-only export route to no-exit-flow-obstruction.
+    # (0.1.1 — D-3/D-4/D-5/D-6, C-1.)
 
   - id: standard-export-format
     statement: >
@@ -106,15 +122,19 @@ checks:
       finding; no artifact to assess);
       unobserved if an export was initiated but no artifact was delivered
       within the window;
-      fail if structured content exports only as flattened renderings
-      (PDF/images), or the artifact is an undocumented proprietary format,
-      or it is consumable only by the same vendor's import, or a standard
-      wrapper carries opaque payloads;
+      fail if ANY material content type is available only as a flattened
+      rendering (PDF/images of structured content), only as an undocumented
+      proprietary format, only as a same-vendor-importable artifact, or only
+      as opaque payloads inside a standard wrapper — judged per content
+      type, so clean JSON for trivial types does not launder a proprietary
+      blob for the crown-jewel type;
       conditional if machine-readable and documented but nonstandard (custom
-      schema with published documentation — the tolerance edge);
-      pass otherwise (structured, commonly-used, machine-readable formats
-      appropriate to the exported data types).
+      schema with documentation sufficient to implement an independent
+      reader — the tolerance edge);
+      pass otherwise (every exported content type in structured,
+      commonly-used, machine-readable formats).
     severity: blocking
+    # Per-type fail arms + reader-sufficiency doc floor (0.1.1 — D-12/D-29).
 
   - id: export-completeness
     statement: >
@@ -137,43 +157,68 @@ checks:
       unobserved if account contents could not be enumerated or diffed
       against the artifact within the window;
       fail if a material user-contributed content type present in the
-      account is absent from the export;
+      account is absent from the export, OR items within a type are
+      materially incomplete against the account inventory (collections
+      truncated; half the documents missing) — item-level judgment, not
+      one-specimen-per-type;
       conditional if contributed content is complete but organizing metadata
       is omitted or degraded such that reconstruction elsewhere is
       materially impaired;
-      pass otherwise (content types complete with reconstruction metadata).
+      pass otherwise (content types complete, item-complete against
+      inventory, with reconstruction metadata).
     severity: blocking
+    # Item-level incompleteness arm (0.1.1 — C-2).
 
   - id: self-service-deletion
     statement: >
       Account deletion MUST be available self-service, in the medium where
       the account is used, without human intervention and without a payment
       gate — not email-us-to-delete, not a retention call, not a different
-      medium, not gated behind reactivating or re-entering payment. A
-      reasonable re-authentication step is fine. A stated recovery window
-      (<= 30 days) before permanent deletion is fine; deferral beyond it is
-      not.
+      medium, not gated behind reactivating a plan or entering payment to
+      ACCESS deletion. Mandatory prerequisites of reaching the delete
+      control are part of the deletion path: their channel/medium/payment
+      character is judged transitively here (a phone-wall cancel-first
+      prerequisite gates deletion on a human channel); the prerequisite
+      flow's internal quality stays with its owner. Settling charges already
+      owed for services rendered is debt settlement, not a payment gate. A
+      reasonable re-authentication step — password/2FA, or a reliable
+      non-expiring automated confirmation link (the sibling's D-1 boundary,
+      imported) — is fine; unreliable/expiring links are obstruction (check
+      no-exit-flow-obstruction); identity demands exceeding the account's
+      own login strength are a conditional friction. A stated recovery
+      window (<= 30 days) is fine; deferral beyond it is a caveat; stated
+      completion beyond 90 days is a refusal with a date on it.
     keyword: MUST
     modes: [ behavioral ]
     evidence: [ flow_transcript, screenshot, dom_snapshot, contract_text ]
     procedure: >
       From account settings, attempt deletion end-to-end using only
-      self-service controls in the account's medium; record any
-      human-mediated gate, medium switch, or payment/reactivation gate;
-      capture stated effective/recovery terms.
+      self-service controls in the account's medium, walking any mandatory
+      prerequisites and recording each one's channel/medium/payment
+      character; record re-authentication or identity demands against the
+      account's own login strength; capture stated effective/recovery terms.
     decision: >
       ordered cascade, first match wins (§4.6):
       na if no persistent user account exists;
       unobserved if deletion surfaces could not be reached within the window;
-      fail if no deletion path exists, or deletion is gated on a
-      human-mediated channel, or requires a different medium than the
-      account's own, or is gated behind payment or plan reactivation;
+      fail if no deletion path exists, or deletion (including any mandatory
+      prerequisite of reaching it) is gated on a human-mediated channel, or
+      requires a different medium than the account's own, or is gated
+      behind plan reactivation or a charge levied to access deletion
+      (settling an existing owed balance is not this shape), or the stated
+      completion/deferral exceeds 90 days;
       conditional if deletion is self-service but completion is deferred
-      beyond a stated recovery window of 30 days;
-      pass otherwise (self-service in-medium deletion, no human or payment
-      gate, immediate or within a stated <=30-day recovery window; re-auth
-      confirm fine).
+      beyond a stated recovery window of 30 days (and <= 90), OR the flow
+      demands identity verification exceeding the account's own login
+      strength;
+      pass otherwise (self-service in-medium deletion incl. prerequisites,
+      no human or payment gate, immediate or stated <=30-day recovery;
+      re-auth at-or-below login strength or reliable confirmation link
+      fine).
     severity: blocking
+    # Prerequisite transitivity, imported confirmation-link boundary, debt
+    # carve-out, ID-strength line, 90-day fail bound (0.1.1 —
+    # D-8/D-9/D-17/D-18/D-24, C-3).
 
   - id: no-exit-flow-obstruction
     statement: >
@@ -181,11 +226,17 @@ checks:
       patterns: retention/diversion interstitials not each declinable in a
       single action; a gauntlet of three or more in one flow (even if
       dismissible) or same-attempt reappearance; confirmshaming as the only
-      path; trick-worded or inverted confirmations; concealment or burial of
-      the export/delete controls (including a mandatory multi-screen detour
-      before the real control); mandatory free-text reasons; manufactured
-      latency; unreliable or expiring confirmation/delivery mechanics; or
-      deceptive-pressure content.
+      path; trick-worded or inverted confirmations; pre-selected retention
+      options (pre-checked keep-my-data / stay-subscribed boxes inside exit
+      flows); concealment or burial of the export/delete controls (including
+      a mandatory multi-screen detour before the real control);
+      item-by-item-only export with no bulk path, disproportionate to the
+      account's contents; mandatory free-text reasons; manufactured latency
+      (artificial holds); unreliable, expiring, or non-delivering
+      confirmation/delivery mechanics — including a stated export completion
+      that elapses with no artifact (the cases checks self-service-export
+      and self-service-deletion route here); or deceptive-pressure content
+      (fake countdowns/scarcity/data-loss urgency).
     keyword: MUST_NOT
     modes: [ behavioral ]
     evidence: [ flow_transcript, screenshot, dom_snapshot ]
@@ -204,58 +255,91 @@ checks:
       flow (offers, surveys, pause/downgrade pitches, mandatory detour
       screens — plain confirmations excluded) or same-attempt reappearance;
       confirmshaming as the only path; trick-worded/inverted confirmation;
+      a pre-selected retention option (data kept, deletion deferred, or
+      communications enrollment defaulted-on inside an exit flow);
       concealment or burial of the export/delete control (including rendered
       but not interactable, or reachable only through a mandatory unrelated
-      wizard); mandatory free-text reason; manufactured latency;
-      unreliable/expiring confirmation or delivery mechanics; or
-      deceptive-pressure content;
+      wizard); per-item-only export with no bulk path; mandatory free-text
+      reason; manufactured latency (artificial holds); unreliable, expiring,
+      or non-delivering confirmation/delivery mechanics (including elapsed
+      stated completion with no artifact); or deceptive-pressure content
+      (fake countdown/scarcity/data-loss urgency);
       conditional if one or two retention offers / exit surveys, each
       dismissible or skippable in a single action (recurrence only on later
       separate attempts stays conditional);
-      pass otherwise (no retention interventions; plain confirmations and
-      reasonable re-auth are not offers).
+      pass otherwise (no retention interventions; plain confirmations,
+      reasonable re-auth, and a bulk path with sensible batching are not
+      obstruction).
     severity: blocking
     # The exit-flow analogue of no-subscription-trap check 3; its calibrated
     # volume rule (>=3 / same-attempt reappearance fail; 1-2 dismissible
     # conditional) is adopted verbatim. This is the dark-pattern surface
     # this criterion owns (scope; no-dark-patterns defers here).
+    # Combined cancel-and-delete flows (0.1.1, D-7): each interstitial
+    # counted EXACTLY ONCE by what it pitches — subscription retention ->
+    # no-subscription-trap check 3; account/data retention -> here; plain
+    # confirmations neither. Stated identically on both sides (sibling
+    # 0.1.8). Pre-selection/fragmentation/non-delivery + glosses added at
+    # 0.1.1 (D-13/D-15/D-6/D-26).
 
   - id: deletion-honored
     statement: >
-      A completed deletion MUST be honored: the account MUST NOT remain
-      observably live or silently restorable past the stated recovery
-      window; user data MUST NOT observably persist under the account after
-      completion (including as established by documented third-party
-      evidence such as enforcement findings); provider-initiated messaging
-      MUST wind down. A terminal state presented as deletion counts as
-      deletion — a deactivation masquerading as deletion violates this
-      check.
+      A completed deletion MUST be honored. Scope: the account's deletion,
+      and any product-offered bulk or privacy data-deletion control (a
+      delete-my-data control, a parental deletion control, a
+      delete-all-recordings setting — NOT every per-item delete button;
+      0.1.1 D-1, adopted deliberately per the Art. 17 grounding). Honored
+      means: the account or covered data MUST NOT remain observably live,
+      present, or silently restorable past the stated recovery window; a
+      pending deletion MUST NOT be cancelled by anything other than an
+      explicit, user-initiated recovery action; and provider-initiated
+      messaging MUST wind down — transactional messages (required to effect
+      deletion/recovery: confirmation, completion, security) are fine within
+      the horizon; promotional/retention messaging after completion or
+      during a pending recovery window is treating the account as live.
+      Where no wind-down is stated, a 7-day default horizon applies.
+      Disclosed, legally required retention of specific records, stated at
+      deletion, is not a violation — presenting such a deletion as total is.
+      A terminal state presented as deletion counts as deletion.
     keyword: MUST
     modes: [ behavioral ]
     evidence: [ screenshot, flow_transcript, notification_record, contract_text ]
     procedure: >
-      Complete deletion; capture stated effective/recovery terms. After the
-      stated recovery window (where the observation window permits), attempt
-      login and record whether the account or data silently restores;
-      monitor the address for provider messaging beyond transactional
-      wind-down.
+      Complete the deletion (account or covered data-deletion control);
+      capture stated effective/recovery terms and any disclosed
+      lawful-retention notice. During any recovery window: perform NO
+      authenticated interaction (do not restart the clock — §9); monitor for
+      promotional messaging. After the stated window (where the observation
+      window permits): attempt login / re-query covered data; monitor
+      messaging against the stated (or default 7-day) horizon.
     decision: >
       ordered cascade; fail precedes unobserved — a permitted §4.6
       deviation: the terms-based shapes are decidable from captured terms
       even when the post-window boundary is not:
       na if no deletion path exists (check self-service-deletion's finding);
-      fail if stated terms contradict deletion (deactivation or
-      indefinite retention-for-reactivation presented as deletion), or login
-      after the stated recovery window silently restores the account and
-      data, or user data under the account observably persists after
-      completion (including documented third-party evidence), or marketing
-      continues beyond a stated wind-down;
-      unobserved if no terms-decidable trap but the post-window state is not
-      observable within the observation window (partial scope, CONDITIONAL —
-      not pass);
-      pass otherwise (terminal deletion confirmed; post-window boundary
-      observed with no restoration, no persistence, messaging wound down).
+      fail if stated terms contradict deletion (deactivation or indefinite
+      retention-for-reactivation presented as deletion; undisclosed lawful
+      retention presented as total deletion), or login after the stated
+      recovery window silently restores the account/covered data, or the
+      pending deletion was cancelled by a non-explicit interaction
+      (passive-reset), or the account/covered data observably persists after
+      completion, or promotional/retention messaging RECURS during the
+      recovery window or beyond the stated (or default 7-day) horizon;
+      unobserved if no terms-decidable trap but the post-window boundary OR
+      the wind-down horizon is not observable within the window (partial
+      scope, CONDITIONAL — not pass);
+      conditional if honored in all observable respects except a SINGLE
+      residual promotional message past the horizon (a straggler, not a
+      campaign);
+      pass otherwise (terminal deletion confirmed; post-window boundary and
+      horizon observed clean; any lawful retention disclosed at deletion).
     severity: blocking
+    # Evidence note (0.1.1, D-2): third-party/enforcement evidence is NOT a
+    # probe-decision input — it routes to the protocol's challenge/
+    # revocation machinery; corpus rows citing enforcement facts remain
+    # rater-adjudicable substrate. Messaging lattice, passive-reset,
+    # lawful-retention carve-out, data-deletion-control scope: 0.1.1
+    # (D-1/D-10/D-11/D-22/D-25, C-4).
 
   - id: pre-deletion-export-prompt
     statement: >
@@ -270,8 +354,9 @@ checks:
       whether export is surfaced anywhere before it.
     decision: >
       ordered cascade, first match wins (§4.6):
-      na if no export path exists (check self-service-export's finding) or
-      no deletion path exists (check self-service-deletion's);
+      na if no export path exists AT ALL (a gated/paywalled path still
+      counts as one for this check — 0.1.1 D-23) or no deletion path exists
+      (check self-service-deletion's finding);
       unobserved if the deletion flow could not be reached within the window;
       fail if the flow reaches its terminal action with no export affordance
       or mention before it (contributes CONDITIONAL, not FAIL — SHOULD);
@@ -284,7 +369,7 @@ checks:
 aggregation:                       # CRITERION-SPEC §4.4 defaults; checks 1–6 blocking, check 7 caveat
   pass_if:          "all blocking checks (1-6) pass (na excluded, and at least one blocking check applied — §4.4); no check conditional; check 7 pass, na, or unobserved"
   fail_if:          "any blocking check (1-6) fails (enumerate ALL failing blocking checks — §5.2)"
-  conditional_if:   "no blocking fail AND (any check returns conditional OR check 7 (caveat) fails OR a blocking check is unobserved / partial scope)"
+  conditional_if:   "no blocking fail AND (any check returns conditional — possible on 1,2,3,4,5,6 — OR check 7 (caveat) fails OR a blocking check is unobserved / partial scope)"
   indeterminate_if: "probe could not provision an account or reach exit surfaces at all; or consensus not reached; or every blocking check returned na — no account and no data, criterion did not apply (§4.4)"
   # check 7 unobserved does not downgrade (non-blocking partial scope);
   # check 6 unobserved is EXPECTED to be common (recovery windows exceed
@@ -317,11 +402,12 @@ validation:                        # §7 — nulls until measured; gates status 
   enclave_pool:   { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }   # expected n/a — purely behavioral, no submitted code (§7.2, the no-subscription-trap shape)
   kill_thresholds: { false_pass_max: 0.05, false_flag_max: 0.10 }   # illustrative until the corpus is assembled (§7.2); sealed set sized >= 3/epsilon per side
 
-claim_template: >                  # §8
+claim_template: >                  # §8 — {tiers} load-bearing for the procurement wedge (0.1.1, D-14)
   "Service {service_identity} was observed to satisfy no-lock-in@{version}
    under rubric {rubric_version}, probe script {prompt_version}, model set
-   {model_set}, modes {modes}, over observation window {window}; measured
-   false-pass {fp} / false-flag {ff} on corpus {corpus_hash}."
+   {model_set}, modes {modes}, at account tier(s) {tiers}, over observation
+   window {window}; measured false-pass {fp} / false-flag {ff} on corpus
+   {corpus_hash}."
 
 prompt_bundle: { ref: null, version: null }   # §9 — single-mode: the probe script (planned; authored on the path to candidate)
 
@@ -331,7 +417,8 @@ provenance:                        # §10
   sources:
     - "GDPR Art. 20 (portability: structured, commonly used, machine-readable) and Art. 17 (erasure)"
     - "CCPA/CPRA — Cal. Civ. Code 1798.105 (deletion), 1798.130 (portability)"
-    - "EU Data Act (Regulation (EU) 2023/2854) — cloud switching + data-egress charges (applicable Sept 2025)"
+    - "EU Data Act (Regulation (EU) 2023/2854) — cloud switching + data-egress charges (applicable Sept 2025); check 1 is deliberately stricter than its transitional at-cost regime (D-27)"
+    - "GDPR Art. 12(3) — one-month response line anchoring the 30-day bands (checks 1/4)"
     - "EU Digital Markets Act Art. 6(9) — end-user data portability"
     - "United States v. Amazon.com, Inc. (Alexa) — DOJ-filed FTC action (2023, $25M): deletion promises not honored. Public record"
     - "Apple App Store Review Guideline 5.1.1(v) (2022) — in-app account deletion norm"
@@ -340,4 +427,5 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.1, date: 2026-07-06, change: "review-pass fixes (blind domain reviewer, 30 findings + 19 evasion lanes; conformance pass inline after an agent stall, 4 findings). Blocking D-1 resolved as option (a): deletion-honored scope extended to product-offered bulk/privacy data-deletion controls — the Alexa anchor now decides its check; D-2: third-party evidence routed to challenge/revocation, out of the probe decision. self-service-export: tier rule reversed (all held data exports on current tier); 30/90-day stated-completion bands (Art. 12(3)); human-mediated completion = conditional regardless of timeframe; pending-unobserved arm; elapsed-no-artifact -> obstruction. standard-export-format: per-type fail arms; reader-sufficiency doc floor. export-completeness: item-level incompleteness arm. self-service-deletion: prerequisite transitivity; imported confirmation-link boundary; owed-balance carve-out; ID-strength line; >90-day fail bound. no-exit-flow-obstruction: pre-selected retention, per-item-only export, non-delivery mechanics, glosses; combined-flow interstitial targeting rule (sibling 0.1.8 mirrors). deletion-honored: messaging lattice (transactional defined, 7-day default horizon, recovery-window marketing, single-straggler conditional — new conditional arm, aggregation updated); unobserved extended to the horizon; passive-reset shape + no-authenticated-interaction probe rule; lawful-retention carve-out. pre-deletion-export-prompt: na only when no export path AT ALL. Claim gains {tiers}. Scope: identity/credential portability non-goaled; post-termination grace explicitly deferred. Corpus 38 -> 64 (+26, every new shape and previously unanchored predicate anchored)", rationale: "one blocking anchor-fit failure (T-9), three coordinated check-1 pass-lane holes, three cross-criterion ownership rules needed before no-surveillance and calibration harden around them — all verified against file text; reviewer endorsed the deliberate positions (unobserved->CONDITIONAL, fee line, single-mode, export-archive canary); all new boundaries un-probed, queued in SPEC 11" }
     - { version: 0.1.0, date: 2026-07-06, change: "initial draft — third and final Stage 0 criterion; seven checks, single-mode behavioral; scope drawn against no-subscription-trap (billing vs account/data exit), transparent-pricing (exit-fee honesty), no-surveillance (observable exit facts owned here), no-dark-patterns (check 5 = the owned obstruction surface, adopting the sibling's calibrated >=3 volume rule verbatim); one enforcement anchor (DOJ/FTC Alexa deletion 2023), further dpa-decision anchors queued", rationale: "completes the design doc's Stage 0 set for the procurement wedge; first criterion authored natively against CRITERION-SPEC 0.6.0 — zero new mold findings (the mold has now absorbed three distinct criterion shapes unmodified)" }

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-subscription-trap
-version: 0.1.7
+version: 0.1.8
 status: draft                      # draft | candidate | active | deprecated
 title: No Subscription Trap
 supersedes: null
@@ -33,7 +33,7 @@ scope:
   related:
     - { id: no-dark-patterns,    relation: overlaps }    # this criterion OWNS the cancellation flow + the auto-renewal disclosure/consent FACTS of signup (fact-based boundary, v0.1.6); other signup manipulation is no-dark-patterns'
     - { id: transparent-pricing, relation: complements }
-    - { id: no-lock-in,          relation: complements }
+    - { id: no-lock-in,          relation: complements }  # combined cancel+delete flows: interstitials counted exactly once by pitch — subscription retention -> this check 3, account/data retention -> their check 5 (v0.1.8, their D-7); cancel-first prerequisites to deletion judged transitively by their check 4
 
 observation_modes: [ behavioral ]  # single-mode by nature (§4)
 
@@ -233,6 +233,7 @@ provenance:
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.8, date: 2026-07-06, change: "editorial: combined cancel-and-delete flow interstitial targeting rule added to 3.3 (subscription-retention pitches -> check 3; account/data-retention pitches -> no-lock-in check 5; each counted once; plain confirmations neither); no check, decision, or boundary changes", rationale: "both criteria carry the same >=3 volume rule, so a shared flow needed a one-owner-per-interstitial allocation (no-lock-in 0.1.1 review, finding D-7); stated identically on both sides per CRITERION-SPEC 3.3" }
     - { version: 0.1.7, date: 2026-07-06, change: "conformance bump to CRITERION-SPEC 0.6.0; conforms-to line only — the 0.6.0 multi-mode machinery is additive and this criterion is single-mode (flat prompt_bundle and per-pool validation shapes remain legal)", rationale: "keep both criteria on the current mold version" }
     - { version: 0.1.6, date: 2026-07-06, change: "editorial: 3.3 ownership line restated fact-based (cancellation flow + auto-renewal disclosure/consent facts of signup); no check, decision, or boundary changes", rationale: "the renewal-consent-flows wording read as claiming the whole signup flow, leaving signup-adjacent manipulation ambiguously owned (no-dark-patterns 0.1.1 review, finding D-6); the intent was always the facts reading" }
     - { version: 0.1.5, date: 2026-07-03, change: "external reviewer pass: check 6 decision made total (fail covers vague / missing-amount-date / late notices, pass otherwise); check 5 fail covers cadence-only-in-linked-terms and conditional widened to in-primary-flow-not-adjacent (D-3 accordion boundary preserved); check 3 gains trick-wording prong (double negatives / reversed checkboxes); check 2 gains na when cancellation is channel-gated or no full-cancel path exists (check 1 owns the gate). Corpus: adobe-etf + four clean rows restated with deciding facts (T-9); weak-disclosure pinned to the pay screen; annual-lockstep note = deferred-effective-date; probe table labeled historical. Manifest: human_calibration migrated to the CRITERION-SPEC 0.5.0 shape; conforms-to 0.5.0. Re-verify residue: check 2 statement synced to the na scoping; manifest check-3 statement carries the error-prone qualifier; adobe row states >=3 explicitly; confidence bands half-open; check 5 conspicuousness/legibility lane queued for calibration", rationale: "two 4.6 totality/parity violations and T-9 fact gaps found by an independent reviewer pass; boundary moves permitted pre-active (T-4/T-7). Phone-wall keys preserved per corpus-as-arbiter (4.6). New boundaries (check 6 notice content, check 5 cadence/placement, check 3 trick-wording, check 2 channel-na) not yet re-probed - queued for the next calibration round" }
