@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-lock-in
-version: 0.1.5
+version: 0.1.6
 status: draft                      # draft | candidate | active | deprecated
 title: No Lock-In
 supersedes: null
@@ -394,12 +394,19 @@ corpus:                            # §6
   minimums: { clean: 10, violating: 10, boundary: 5, adversarial: 5, injection_canary: 3, defeat_device: 2 }
 
 validation:                        # §7 — nulls until measured; gates status transitions
-  human_calibration:               # §7.1 — target pre-registered at v0.1.3, before any human adjudication
-    target: { aggregate: "Cohen's kappa >= 0.8", hard_subset: ">=80% exact-verdict on boundary+adversarial pooled", registered_at: 2026-07-06 }
-    adjudicators: 0
-    agreement_aggregate: null
-    agreement_hard_subset: null    # boundary+adversarial pooled
-    corpus_covered: null           # fraction of public-corpus rows adjudicated (SHOULD be 1.0)
+  calibration:                     # §7.1 (CRITERION-SPEC 0.7.0, T-13) — two components; targets pre-registered before any counted round
+    reliability:                   # (a) full corpus; counted panel >=2 blinded adjudicators, mutually lineage-unrelated, authoring-lineage-independent (human or model)
+      target: { aggregate: "Cohen's kappa >= 0.8", hard_subset: ">=80% exact-verdict on boundary+adversarial pooled", registered_at: 2026-07-06 }   # thresholds as originally registered; rater-class clause recomposed 2026-07-06 (T-4 window); the 2026-07-06 author-lineage panel is not counted
+      adjudicators: 0
+      agreement_aggregate: null
+      agreement_hard_subset: null  # boundary+adversarial pooled
+      corpus_covered: null         # fraction of public-corpus rows adjudicated (SHOULD be 1.0)
+    human_anchor:                  # (b) >=2 independent humans; stratified sample (all boundary+adversarial rows + watch-items + stated random slice)
+      target: { sample: ">=80% exact-verdict on the stratified sample", registered_at: 2026-07-06 }
+      adjudicators: 0
+      sample_size: null
+      agreement_sample: null       # inter-human, on the sample
+      agreement_vs_reliability: null
   frontier_pool:  { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }
   enclave_pool:   { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }   # expected n/a — purely behavioral, no submitted code (§7.2, the no-subscription-trap shape)
   kill_thresholds: { false_pass_max: 0.05, false_flag_max: 0.10 }   # illustrative until the corpus is assembled (§7.2); sealed set sized >= 3/epsilon per side
@@ -429,6 +436,7 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.6, date: 2026-07-06, change: "7.1 recomposition migration (CRITERION-SPEC 0.7.0, T-13): human_calibration -> calibration.{reliability, human_anchor}; reliability thresholds carried (registered 2026-07-06); human-anchor sample target >=80% exact-verdict registered 2026-07-06, stratum subsumes the v0.1.3 watch-list rule; the 2026-07-06 cross-vendor panel not counted; no check, decision, or corpus changes", rationale: "watch-list boundaries and hard categories concentrate the human anchor where judgment is fragile" }
     - { version: 0.1.5, date: 2026-07-06, change: "cross-vendor panel run 2 (Claude + GPT-5, full 64-row corpus, blinded packets): 64/64 kappa 1.00, both 64/64 vs key. Watch-list combined-flow targeting question surfaced as predicted on bound-syn-single-offer; row now states pitch target + no-subscription-pitch (targeting rule literally decidable). Conforms-to 0.6.1 (T-12, additive). Evidence: calibration/panel-2026-07-06/", rationale: "one row-fact sharpening, no decision changes; the watch-list predicted exactly where ambiguity would surface — the calibration machinery working; human_calibration stays 0" }
     - { version: 0.1.4, date: 2026-07-06, change: "corpus README status prose synced (dry-run recorded at 0.1.2, 7.1 target registered at 0.1.3 — the README still described both as pending); no row, check, decision, or label changes", rationale: "public record consistency; the registration commit touched SPEC and manifest but missed the corpus README's status narration" }
     - { version: 0.1.3, date: 2026-07-06, change: "7.1 human-calibration target pre-registered: Cohen's kappa >= 0.8 aggregate AND >=80% exact-verdict on boundary+adversarial pooled (registered_at 2026-07-06); gate item selection bound to the section-11 watch-list; no other changes", rationale: "stated-in-advance discipline (CRITERION-SPEC 7.1) — registered after the first dry-run, before any human adjudication; mirrors both siblings' targets" }

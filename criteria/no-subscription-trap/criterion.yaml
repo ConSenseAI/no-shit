@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-subscription-trap
-version: 0.1.9
+version: 0.1.10
 status: draft                      # draft | candidate | active | deprecated
 title: No Subscription Trap
 supersedes: null
@@ -198,15 +198,19 @@ corpus:
   minimums: { clean: 10, violating: 10, boundary: 5, adversarial: 5, injection_canary: 3, defeat_device: 2 }
 
 validation:
-  human_calibration:               # gate: draft -> candidate; target pre-registered at v0.1.3 (SPEC §7)
-    target:
-      aggregate: "Cohen's kappa >= 0.8"
-      hard_subset: ">=80% exact-verdict on boundary+adversarial pooled"
-      registered_at: 2026-07-02
-    adjudicators: 0
-    agreement_aggregate: null
-    agreement_hard_subset: null
-    corpus_covered: null
+  calibration:                     # §7.1 (CRITERION-SPEC 0.7.0, T-13) — two components; targets pre-registered before any counted round
+    reliability:                   # (a) full corpus; counted panel >=2 blinded adjudicators, mutually lineage-unrelated, authoring-lineage-independent (human or model)
+      target: { aggregate: "Cohen's kappa >= 0.8", hard_subset: ">=80% exact-verdict on boundary+adversarial pooled", registered_at: 2026-07-02 }   # thresholds as originally registered; rater-class clause recomposed 2026-07-06 (T-4 window); the 2026-07-06 author-lineage panel is not counted
+      adjudicators: 0
+      agreement_aggregate: null
+      agreement_hard_subset: null  # boundary+adversarial pooled
+      corpus_covered: null         # fraction of public-corpus rows adjudicated (SHOULD be 1.0)
+    human_anchor:                  # (b) >=2 independent humans; stratified sample (all boundary+adversarial rows + watch-items + stated random slice)
+      target: { sample: ">=80% exact-verdict on the stratified sample", registered_at: 2026-07-06 }
+      adjudicators: 0
+      sample_size: null
+      agreement_sample: null       # inter-human, on the sample
+      agreement_vs_reliability: null
   frontier_pool:  { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }
   enclave_pool:   { false_pass: null, false_flag: null, indeterminate: null, agreement: null, cost_usd: null }   # likely n/a: purely behavioral, no code-confidentiality need (CRITERION-SPEC §7.2)
   kill_thresholds: { false_pass_max: 0.05, false_flag_max: 0.10 }   # sealed set sized >= 3/epsilon per side: >=60 violating, >=30 clean
@@ -233,6 +237,7 @@ provenance:
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.10, date: 2026-07-06, change: "7.1 recomposition migration (CRITERION-SPEC 0.7.0, T-13): human_calibration -> calibration.{reliability, human_anchor}; reliability thresholds carried (registered 2026-07-02); human-anchor sample target >=80% exact-verdict registered 2026-07-06; the 2026-07-06 cross-vendor panel not counted (author-lineage rater, predates recomposition); no check, decision, or corpus changes", rationale: "reliability is now the model panel's job (lineage-diverse, full corpus); anchoring stays human — the criteria assert facts about human experience, and an instrument is not calibrated against copies of itself" }
     - { version: 0.1.9, date: 2026-07-06, change: "cross-vendor panel run 3 (Claude + GPT-5, full 42-row corpus, blinded packets): 42/42 kappa 1.00, both 42/42 vs key; strict recurrence cap held on an unrelated lineage. T-9 row fixes: pagetext canary signup channel, retention-maze two-step signup, accordion probe cadence. Conforms-to 0.6.1 (T-12 silence semantics, additive). Evidence: calibration/panel-2026-07-06/", rationale: "panel divergence flags were the only text gaps found; verdicts unchanged; human_calibration stays 0 — cross-vendor LLM proxy is not the formal gate" }
     - { version: 0.1.8, date: 2026-07-06, change: "editorial: combined cancel-and-delete flow interstitial targeting rule added to 3.3 (subscription-retention pitches -> check 3; account/data-retention pitches -> no-lock-in check 5; each counted once; plain confirmations neither); no check, decision, or boundary changes", rationale: "both criteria carry the same >=3 volume rule, so a shared flow needed a one-owner-per-interstitial allocation (no-lock-in 0.1.1 review, finding D-7); stated identically on both sides per CRITERION-SPEC 3.3" }
     - { version: 0.1.7, date: 2026-07-06, change: "conformance bump to CRITERION-SPEC 0.6.0; conforms-to line only — the 0.6.0 multi-mode machinery is additive and this criterion is single-mode (flat prompt_bundle and per-pool validation shapes remain legal)", rationale: "keep both criteria on the current mold version" }

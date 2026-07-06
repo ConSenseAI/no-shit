@@ -1,6 +1,6 @@
 # Validation Study — Protocol
 
-**Version:** 0.1.0 · **Status:** draft — **not frozen; not yet a pre-registration**
+**Version:** 0.1.1 · **Status:** draft — **not frozen; not yet a pre-registration**
 **Serves:** design doc *Threat Model & Validation* (the study design and kill criteria) and *MVP — Stage 0* (deliverable 2); CRITERION-SPEC §7.2 (the candidate → active gate this study runs) and §7.3 (the record that travels with every attestation)
 **Evidence base:** [`notes/audit-accuracy.md`](../notes/audit-accuracy.md) — what is known about maximizing true/false accuracy on claims about software, and why this protocol is shaped the way it is
 
@@ -14,7 +14,7 @@ The study tests the protocol's keystone assumption (design doc, Assumptions A1):
 
 Project-level and criterion-level views are the same study: the Stage 0 → Stage 1 gate is CRITERION-SPEC §7.2 (candidate → active) run over the Stage 0 criterion set (`no-subscription-trap`, `no-dark-patterns`, `no-lock-in`). The project-kill condition is the design doc's: **no criterion clears its thresholds after two rubric iterations.** Per-criterion shippability is decided per (pool × mode) cell.
 
-**Prerequisite, not part of this study:** each criterion passes its §7.1 human-calibration gate first (draft → candidate). All three targets are pre-registered in the manifests (κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial pooled). The §7.1 results feed this study as the adjudication-error prior (§3).
+**Prerequisite, not part of this study:** each criterion passes its §7.1 calibration gate first (draft → candidate; recomposed at CRITERION-SPEC 0.7.0/T-13 into a full-corpus lineage-diverse **reliability** component — human or model adjudicators — plus a stratified **human-anchor** sample). All targets are pre-registered in the manifests (reliability: κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial pooled; anchor: ≥80% exact-verdict on the sample). The §7.1 results feed this study as the adjudication-error prior (§3).
 
 ## 2. Registration discipline
 
@@ -26,7 +26,7 @@ Project-level and criterion-level views are the same study: the Stage 0 → Stag
 
 Audit error factors as **observation error × adjudication error** (`notes/audit-accuracy.md`). The study measures the factors separately before measuring them end-to-end, because they fail differently and are fixed differently:
 
-- **Q1 — Adjudication:** given established facts, do the criterion's decision arms produce the right verdict? Instrument: the **public corpora** (rows are the adjudication substrate, CRITERION-SPEC §6.4) under blind raters. The §7.1 human gates are the formal instrument; blind model-diverse LLM panels extend n cheaply. Prior evidence: dry-runs at κ = 1.00 on `no-dark-patterns` (22/22) and `no-lock-in` (23/23) — strong signal, small n.
+- **Q1 — Adjudication:** given established facts, do the criterion's decision arms produce the right verdict? Instrument: the **public corpora** (rows are the adjudication substrate, CRITERION-SPEC §6.4) under blind raters. The §7.1 calibration gates are the formal instrument (lineage-diverse reliability panels + human anchors, CRITERION-SPEC 0.7.0); engineering panels extend n cheaply. Prior evidence: same-lineage dry-runs at κ = 1.00 on `no-dark-patterns` (22/22) and `no-lock-in` (23/23), and an uncounted cross-vendor full-corpus panel (Claude + GPT-5) at 152/152 across all three criteria — the best current estimate of the adjudication-error prior.
 - **Q2 — Observation:** can the audit establish those facts from the artifact — probe agents against a live product, the code audit against a submission? Instrument: **product fixtures with known ground truth** (§4). This is the unmeasured half and the study's main work.
 - **Q3 — End-to-end:** the §7.2 gate itself — per-criterion false-pass / false-flag per (pool × mode) cell on the **sealed** corpus, full pipeline, no shortcuts.
 
@@ -120,5 +120,7 @@ Published regardless of outcome: the frozen protocol and freeze hash; per-cell t
 8. Whether §7.1 human-gate adjudicators may also serve as study labelers (independence trade-off vs. calibrated-rater scarcity).
 
 ## 13. Changelog
+
+- **0.1.1** (2026-07-06) — §1 prerequisite synced to the §7.1 calibration-gate recomposition (CRITERION-SPEC 0.7.0, T-13): reliability component (full corpus, lineage-diverse, human or model) plus human-anchor sample; targets restated. No methodology changes.
 
 - **0.1.0** (2026-07-06) — initial draft. Encodes the design doc's study design, selection-bias handling, and kill criteria; CRITERION-SPEC §7.2 gate mechanics (per-(pool × mode) cells, 3/ε sizing, sealed-corpus discipline); and the `notes/audit-accuracy.md` methodology requirements registered in advance: the observation × adjudication decomposition with per-miss classification, execution-grounding preference with reading-only confidence caps, evidence-terminated (discriminating-check) escalation, skepticism asymmetry toward provisional PASSes, sealed-set fold plan for the two-iteration allowance, and point-estimate gates with published exact CIs. Not frozen; open parameters listed in §12.
