@@ -12,7 +12,7 @@ Machine-verifiable, criterion-specific claims about the anti-extraction properti
 | [`criteria/CRITERION-SPEC.md`](criteria/CRITERION-SPEC.md) | The meta-specification every criterion must conform to: check structure, verdict semantics, versioning invariants, corpus and calibration requirements | v0.6.0, draft |
 | [`criteria/TEMPLATE.md`](criteria/TEMPLATE.md) | Copy-this skeleton for authoring a new criterion | Tracks CRITERION-SPEC |
 | [`criteria/no-subscription-trap/`](criteria/no-subscription-trap/) | The first criterion: cancellation must be symmetric to signup — spec, machine-readable manifest, labeled public corpus, calibration records | v0.1.7, draft |
-| [`criteria/no-dark-patterns/`](criteria/no-dark-patterns/) | The second criterion: choice interfaces must be honest — no fabricated pressure signals, trick controls, consent asymmetry, or sneaked additions. The first dual-mode (code + behavioral) criterion | v0.1.2, draft |
+| [`criteria/no-dark-patterns/`](criteria/no-dark-patterns/) | The second criterion: choice interfaces must be honest — no fabricated pressure signals, trick controls, consent asymmetry, or sneaked additions. The first dual-mode (code + behavioral) criterion | v0.1.3, draft |
 
 ## The idea, briefly
 
