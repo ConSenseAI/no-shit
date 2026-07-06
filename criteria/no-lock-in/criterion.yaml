@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-lock-in
-version: 0.1.2
+version: 0.1.3
 status: draft                      # draft | candidate | active | deprecated
 title: No Lock-In
 supersedes: null
@@ -394,8 +394,8 @@ corpus:                            # §6
   minimums: { clean: 10, violating: 10, boundary: 5, adversarial: 5, injection_canary: 3, defeat_device: 2 }
 
 validation:                        # §7 — nulls until measured; gates status transitions
-  human_calibration:               # §7.1 — target MUST be pre-registered before formal adjudication begins (not yet registered; expected to mirror the siblings')
-    target: { aggregate: null, hard_subset: null, registered_at: null }
+  human_calibration:               # §7.1 — target pre-registered at v0.1.3, before any human adjudication
+    target: { aggregate: "Cohen's kappa >= 0.8", hard_subset: ">=80% exact-verdict on boundary+adversarial pooled", registered_at: 2026-07-06 }
     adjudicators: 0
     agreement_aggregate: null
     agreement_hard_subset: null    # boundary+adversarial pooled
@@ -429,6 +429,7 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.3, date: 2026-07-06, change: "7.1 human-calibration target pre-registered: Cohen's kappa >= 0.8 aggregate AND >=80% exact-verdict on boundary+adversarial pooled (registered_at 2026-07-06); gate item selection bound to the section-11 watch-list; no other changes", rationale: "stated-in-advance discipline (CRITERION-SPEC 7.1) — registered after the first dry-run, before any human adjudication; mirrors both siblings' targets" }
     - { version: 0.1.2, date: 2026-07-06, change: "first calibration dry-run folded in (calibration-dryrun.md): blind Sonnet+Opus panel, 23 scenarios covering every 0.1.1 boundary — 23/23 inter-rater (kappa = 1.00), both 23/23 vs corrected key, zero underdetermined; panel outperformed the key twice (errata recorded). P-1: covered data includes derivative representations (transcripts/previews/indexes). P-2: downgrade-hostage enumerates checks 1 AND 3 (row relabeled). Section 11 rewritten to probed status", rationale: "operationalization evidence at dry-run scale; combined-flow targeting rule and extended check-6 scope held under blindness; human_calibration stays 0" }
     - { version: 0.1.1, date: 2026-07-06, change: "review-pass fixes (blind domain reviewer, 30 findings + 19 evasion lanes; conformance pass inline after an agent stall, 4 findings). Blocking D-1 resolved as option (a): deletion-honored scope extended to product-offered bulk/privacy data-deletion controls — the Alexa anchor now decides its check; D-2: third-party evidence routed to challenge/revocation, out of the probe decision. self-service-export: tier rule reversed (all held data exports on current tier); 30/90-day stated-completion bands (Art. 12(3)); human-mediated completion = conditional regardless of timeframe; pending-unobserved arm; elapsed-no-artifact -> obstruction. standard-export-format: per-type fail arms; reader-sufficiency doc floor. export-completeness: item-level incompleteness arm. self-service-deletion: prerequisite transitivity; imported confirmation-link boundary; owed-balance carve-out; ID-strength line; >90-day fail bound. no-exit-flow-obstruction: pre-selected retention, per-item-only export, non-delivery mechanics, glosses; combined-flow interstitial targeting rule (sibling 0.1.8 mirrors). deletion-honored: messaging lattice (transactional defined, 7-day default horizon, recovery-window marketing, single-straggler conditional — new conditional arm, aggregation updated); unobserved extended to the horizon; passive-reset shape + no-authenticated-interaction probe rule; lawful-retention carve-out. pre-deletion-export-prompt: na only when no export path AT ALL. Claim gains {tiers}. Scope: identity/credential portability non-goaled; post-termination grace explicitly deferred. Corpus 38 -> 64 (+26, every new shape and previously unanchored predicate anchored)", rationale: "one blocking anchor-fit failure (T-9), three coordinated check-1 pass-lane holes, three cross-criterion ownership rules needed before no-surveillance and calibration harden around them — all verified against file text; reviewer endorsed the deliberate positions (unobserved->CONDITIONAL, fee line, single-mode, export-archive canary); all new boundaries un-probed, queued in SPEC 11" }
     - { version: 0.1.0, date: 2026-07-06, change: "initial draft — third and final Stage 0 criterion; seven checks, single-mode behavioral; scope drawn against no-subscription-trap (billing vs account/data exit), transparent-pricing (exit-fee honesty), no-surveillance (observable exit facts owned here), no-dark-patterns (check 5 = the owned obstruction surface, adopting the sibling's calibrated >=3 volume rule verbatim); one enforcement anchor (DOJ/FTC Alexa deletion 2023), further dpa-decision anchors queued", rationale: "completes the design doc's Stage 0 set for the procurement wedge; first criterion authored natively against CRITERION-SPEC 0.6.0 — zero new mold findings (the mold has now absorbed three distinct criterion shapes unmodified)" }
