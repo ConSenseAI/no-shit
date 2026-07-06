@@ -1,6 +1,6 @@
 # `no-dark-patterns` — No Dark Patterns
 
-**Version:** 0.1.4 · **Status:** draft
+**Version:** 0.1.5 · **Status:** draft
 **Conforms to:** CRITERION-SPEC 0.6.0 (`../CRITERION-SPEC.md`)
 **Observation modes:** code + behavioral (every check is `either`-mode — see §4)
 
@@ -50,7 +50,8 @@ Grounding (§10): the FTC's dark-patterns framework (2022 staff report; Epic Gam
 **Related criteria:**
 - `overlaps` → **`no-subscription-trap`**: it **owns** dark patterns on the cancellation flow and the auto-renewal disclosure/consent facts of signup; this criterion **excludes** those facts and defers there (CRITERION-SPEC §3.3, exactly one owner — stated identically on both sides).
 - `overlaps` → **`no-surveillance`** (future): this criterion **owns** manipulation of the consent *interface*; `no-surveillance` owns data-practice *substance* and, when authored, MUST exclude consent-interface manipulation and defer here.
-- `complements` → **`transparent-pricing`** (price honesty; when authored it MUST exclude the was-the-addition-chosen facts, which are check 7's) and **`no-lock-in`** (exit rights; when authored it MUST exclude decline/withdrawal obstruction outside deletion and export). Reciprocal obligations are recorded here because those criteria are unauthored.
+- `overlaps` → **`no-lock-in`**: it **owns** obstruction within the export and deletion flows (its check 5); this criterion excludes those flows and defers there (stated identically on both sides as of `no-lock-in` 0.1.0).
+- `complements` → **`transparent-pricing`** (price honesty; when authored it MUST exclude the was-the-addition-chosen facts, which are check 7's). Reciprocal obligations are recorded here for the still-unauthored criteria (`transparent-pricing`, `no-surveillance`).
 
 **Applicability.** If the artifact presents **no covered choice surfaces at all** — no purchase flow, no consent or permission prompts, no offers, no selectable options (e.g., a static content page, a CLI tool with no commercial or consent surface) — the criterion does not apply: every blocking check returns `na` and the verdict is **INDETERMINATE** (treated as absent), never a vacuous PASS (CRITERION-SPEC §4.4; this is the first criterion drafted under that 0.5.0 default).
 
@@ -223,6 +224,7 @@ Per CRITERION-SPEC §9 (0.6.0, adopted from finding **T-10** — §11): one audi
 - **first_active:** —
 - **delegation_inclusion_count / overturn_rate:** — (post-launch)
 - **Changelog:**
+  - `0.1.5` — editorial (2026-07-06). `no-lock-in` is now authored: its relation re-tagged `overlaps` (it owns obstruction within export/deletion flows — the reciprocal this spec's non-goals always pointed at is now stated identically on both sides), and the unauthored-criteria framing narrowed to `transparent-pricing`/`no-surveillance`. No check, decision, boundary, or corpus changes.
   - `0.1.4` — §7.1 target pre-registered (2026-07-06): **κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial pooled**, recorded machine-readably in the manifest (`registered_at: 2026-07-06`). Registered after the first dry-run and before any human adjudication, per CRITERION-SPEC §7.1's stated-in-advance discipline; mirrors the sibling's target. No other changes.
   - `0.1.3` — first calibration dry-run folded in (2026-07-06; `calibration-dryrun.md`). Blind model-diverse Sonnet+Opus panel, 22 id-stripped scenarios (§12 anchors + 5 new probes): **22/22 inter-rater verdict agreement (κ = 1.00), both raters 22/22 vs the authored key, zero underdetermined cases**; every deliberate-strict position applied as written, with instinct divergences logged exactly where §12 predicted (check-6 strictness and persistence tolerance, check-8 aggregate, check-5 middle band) — now the human gate's watch-list. Two sharpenings from panel findings: **P-1** check 4↔5 ownership line (check 4 owns what the control *says*; rendered selection/progress state is check 5's — one rater enumerated 4 on the selection-state probe via the umbrella clause; verdict unaffected); **P-2** check 1's seriality wording ("relaunches immediately" → "promptly or on a recurring cadence; an overnight gap does not break seriality" — rater B decided the daily-relaunch probe correctly but named the word as a latent gap). §12 rewritten to probed-status; §7 records the dry-run as proxy (formal gate still requires humans; `human_calibration` stays 0). No corpus changes; the S22 probe stands as check 1's first "material"-qualifier pass-side anchor pending a corpus row (D-15 half-open).
   - `0.1.2` — conformance migration to CRITERION-SPEC 0.6.0 (2026-07-06). T-10/T-11 are now mold rules (0.6.0 §9, §7.2, §4.7 — adopted as this criterion proposed them, with the review's lattice and per-mode-validation refinements); the §4 mode-join text, §7, and §9 now cite the mold instead of stating interim positions, §11 marked resolved, and the manifest's per-mode `prompt_bundle` + per-(pool × mode) validation cells are the legal Appendix A shapes rather than deviations. No check, decision, boundary, or corpus changes.
