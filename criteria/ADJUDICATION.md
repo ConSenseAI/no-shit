@@ -1,7 +1,7 @@
 # Human-Calibration Adjudication — Instructions
 
-**Version:** 0.1.1 · **Status:** draft
-**Serves:** CRITERION-SPEC §7.1 — the human-calibration gate (draft → candidate) — for every criterion in this repository.
+**Version:** 0.2.0 · **Status:** draft
+**Serves:** CRITERION-SPEC §7.1 — the calibration gate (draft → candidate), both components: the full-corpus **reliability** panel (human or model adjudicators) and the stratified-sample **human anchor** — for every criterion in this repository.
 
 Part I is written to be sent to adjudicators as-is, together with the per-criterion packet described in Part II. Part II is the coordinator's protocol: packet preparation, scoring, and recording. Nothing in this document reveals expected answers; blindness rests on the packet construction rules and the adjudicator commitments below.
 
@@ -11,7 +11,7 @@ Part I is written to be sent to adjudicators as-is, together with the per-criter
 
 ### What this is
 
-This project defines certification criteria for anti-extraction properties of software — things like "you can cancel as easily as you signed up" or "you can leave with your data." Before any automated audit pipeline is trusted to judge these criteria, a cheaper and harder test runs first: **can two independent people, applying the written rules to the same described scenarios, reach the same verdicts?** If trained humans can't agree, the rules are under-specified and no automated judge will do better.
+This project defines certification criteria for anti-extraction properties of software — things like "you can cancel as easily as you signed up" or "you can leave with your data." Before any automated audit pipeline is trusted to judge these criteria, a cheaper and harder test runs first: **can independent readers — human or machine — applying the written rules to the same described scenarios, reach the same verdicts?** If calibrated readers can't agree, the rules are under-specified and no downstream audit will do better. Depending on the round you joined, your packet is the full corpus (the reliability component) or a smaller stratified sample (the human-anchor component); the task is identical.
 
 That is your role. **You are grading the rules, not being graded.** A disagreement between you and the other adjudicator is not a mistake — it is the finding this exercise exists to produce. Where the rules are ambiguous, we need to know exactly where, and your worked verdicts are how we find out.
 
@@ -19,7 +19,7 @@ That is your role. **You are grading the rules, not being graded.** A disagreeme
 
 1. **These instructions.**
 2. **The rule excerpt** — the criterion's scope, checks, decision rules, and verdict aggregation: everything needed to decide, and nothing else. (The full specification also contains discussion, worked calibration history, and labeled examples; those are deliberately withheld so your reading is independent.)
-3. **The scenario packet** — 40–65 short product descriptions with neutral IDs (S1, S2, …), in randomized order.
+3. **The scenario packet** — 40–65 short product descriptions (15–25 for a human-anchor sample) with neutral IDs (S1, S2, …), in randomized order.
 4. **The response sheet** — one row per scenario.
 
 ### Your task, per scenario
@@ -44,7 +44,7 @@ That is your role. **You are grading the rules, not being graded.** A disagreeme
 ### Practicalities
 
 - Read the rule excerpt in full once before scenario 1. During adjudication it stays open — this is open-book on the rules, closed-book on everything else.
-- Expect a few minutes per scenario once warmed up; budget **3–6 hours per criterion**. Splitting across sittings is fine; one criterion per sitting is recommended. There is no time pressure and accuracy beats speed everywhere.
+- Expect a few minutes per scenario once warmed up; budget **3–6 hours per criterion** for a full-corpus packet, or about an hour for a human-anchor sample. Splitting across sittings is fine; one criterion per sitting is recommended. There is no time pressure and accuracy beats speed everywhere.
 - The response sheet, per scenario: `ID · verdict · failing blocking checks (if FAIL) · caveat checks (if CONDITIONAL) · driver (if INDETERMINATE) · underdetermined? + missing facts · rule-vs-instinct divergence · notes`.
 - Attestation (end of sheet): *"I adjudicated these scenarios independently, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors."*
 
@@ -60,13 +60,22 @@ From the criterion's public corpus (`corpus/public/README.md`), for each row:
 - **Strip** the row id, category, expected verdict, `checks_exercised`, and provenance columns; strip all authoring annotations from the description — the `(→ N …)` check pointers, changelog/finding references (`0.1.1 D-16`), and cross-references to other rows or the sibling criteria's rows. Row ids and pointers leak expected answers by construction (`viol-…`, `(→ 6)`).
 - Assign neutral sequential IDs; keep the neutral-ID → row-ID mapping private until scoring. Same IDs for all adjudicators (needed to join responses); **independently shuffled presentation order per adjudicator**.
 - Every row the corpus README lists is in scope, including calibration stress probes; `corpus_covered` is computed against that full list (the gate SHOULD cover it entirely).
+- **Human-anchor sample packets:** same construction, restricted to the anchor stratum (every `boundary` + `adversarial` row, every flagged watch-item, plus a random slice of the remainder — record the slice's seed and composition). Fresh neutral IDs and fresh shuffle seeds every round: a published mapping burns its shuffles.
 - The rule excerpt is the SPEC's normative sections only (guarantee, harm model, scope, checks with their decision rules, verdict aggregation — §1–§5, identically numbered in all three current SPECs), with the corpus, validation, calibration, and open-boundary sections removed. The dry-runs adjudicated from exactly this excerpt; the formal gate matches it.
 
 ### Scoring
 
+**Reliability component (full corpus):**
+
 - **Aggregate:** unweighted Cohen's κ (Fleiss' for ≥3 adjudicators) over all adjudicated scenarios, on the four-way verdict.
 - **Hard subset:** exact-verdict agreement on the `boundary` + `adversarial` categories pooled (categories from the hidden labels; adjudicators never see them).
-- Compare against the criterion's **pre-registered target** in its manifest (`validation.human_calibration.target`); record `adjudicators`, `agreement_aggregate`, `agreement_hard_subset`, and `corpus_covered`. For `no-lock-in`, item selection MUST include the registered watch-list boundaries (SPEC §7).
+- **Counted panel (T-13):** only adjudicators mutually lineage-unrelated and independent of the criterion's authoring lineage(s) count toward the gate; author-lineage raters run as diagnostics and are labeled as such in the roster.
+- Compare against the registered target (`validation.calibration.reliability.target`); record `adjudicators`, `agreement_aggregate`, `agreement_hard_subset`, `corpus_covered`.
+
+**Human-anchor component (stratified sample):**
+
+- **Inter-human exact-verdict agreement on the sample** against the registered target (`validation.calibration.human_anchor.target`); record `adjudicators`, `sample_size`, `agreement_sample`.
+- Also record `agreement_vs_reliability` — the human panel's agreement with the reliability panel's verdicts on the same rows. A human split the reliability panel sailed through is a finding (likely a shared-model misreading of a perception-laden predicate), not noise.
 
 ### After scoring
 
@@ -85,9 +94,10 @@ Every round — engineering dry-run or formal gate — publishes, once scoring i
 
 ### Recruiting notes
 
-Adjudicators must be independent — not authors of any criterion, no stake in the outcome, no prior exposure to the corpus labels — and mutually independent (not a pair who will compare notes). The task needs careful reading of normative text, not domain credentials: product, UX-research, QA, legal-adjacent, or engineering backgrounds all work. ≥2 required; 3 gives κ resilience if one submission is unusable.
+Adjudicators must be independent — not authors of any criterion, no stake in the outcome, no prior exposure to the corpus labels — and mutually independent (not a pair who will compare notes). The task needs careful reading of normative text, not domain credentials: product, UX-research, QA, legal-adjacent, or engineering backgrounds all work. ≥2 required; 3 gives κ resilience if one submission is unusable. Under the T-13 recomposition, **human recruitment is needed at anchor-sample scale** — one sitting of 15–25 scenarios per criterion — while model adjudicators cover the full-corpus reliability component, chosen for unrelated training lineages and excluding the criterion's authoring lineage.
 
 ## Changelog
 
+- **0.2.0** (2026-07-06) — synced to the CRITERION-SPEC 0.7.0 gate recomposition (T-13): the document now serves both components — full-corpus **reliability** (human or model; counted panels mutually lineage-unrelated and authoring-lineage-independent) and the stratified **human-anchor** sample (≥2 humans, one sitting). Part I made rater-class-neutral; Part II gains sample-packet construction, per-component scoring, and the counted-panel rule; manifest paths updated to `validation.calibration.*`.
 - **0.1.1** (2026-07-06) — the silence instruction in Part I now cites the mold rule it lacked (CRITERION-SPEC §4.5 T-12 — scenario silence is absence; *unobserved* only for stated observation gaps): the first cross-vendor panel had to invent that convention, which is exactly the gap class this document exists to close. Part II gains **roster, record & publication standards**, written after that panel's roster metadata was under-captured (one rater's packet variant and access route: not recorded).
 - **0.1.0** (2026-07-06) — initial draft: adjudicator-facing instructions (Part I) and coordinator protocol (Part II), codifying the dry-runs' method (id-stripping, §1–§5 rule excerpt, rule-vs-instinct logging, underdetermined flags, corrected-key discipline) for the formal human gates. Written with all three Stage 0 targets registered and no gate yet run.
