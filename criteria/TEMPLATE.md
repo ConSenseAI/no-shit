@@ -9,7 +9,7 @@
 # `<id>` — `<Human-Readable Title>`
 
 **Version:** 0.1.0 · **Status:** draft
-**Spec:** conforms to CRITERION-SPEC 0.5.0
+**Spec:** conforms to CRITERION-SPEC 0.6.0
 
 ---
 
@@ -36,7 +36,8 @@
 
 <!-- Decompose the property into atomic, observable checks. One row per check.
      severity: blocking (fails the criterion) | caveat (its fail → CONDITIONAL) | advisory
-     modes:    code | behavioral | either  (per check — criteria can split) -->
+     modes:    code | behavioral | either  (per check — criteria can split;
+               multi-mode audits join per-check outcomes by the §4.7 lattice) -->
 
 ### Check `<check-id>`
 - **Statement (keyword):** `MUST` … <!-- MUST | MUST_NOT | SHOULD | SHOULD_NOT | MAY -->
@@ -177,7 +178,12 @@ claim_template: >
    audit artifact {prompt_version}, model set {model_set}, modes {modes};
    measured false-pass {fp} / false-flag {ff} on corpus {corpus_hash}."
 
-prompt_bundle: { ref: <uri-or-path>, version: null }   # §9 — the audit artifact: prompt bundle (code) OR probe script (behavioral); key name tracks the attestation's prompt_version field
+prompt_bundle: { ref: <uri-or-path>, version: null }   # §9 — single-mode: the one audit artifact (prompt bundle for code, probe script for behavioral)
+# Multi-mode criteria bind one artifact per declared mode instead (§9), and
+# split validation cells per (pool x mode artifact) (§7.2):
+#   prompt_bundle:
+#     code:       { ref: <uri-or-path>, version: null }
+#     behavioral: { ref: <uri-or-path>, version: null }
 
 provenance:
   authors: [ ]

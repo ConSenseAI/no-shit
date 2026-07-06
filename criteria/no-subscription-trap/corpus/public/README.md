@@ -1,7 +1,7 @@
 # `no-subscription-trap` — public corpus
 
 **Status:** meets `candidate` category minimums (37 examples). The remaining gate to `candidate` is the §7 human-calibration pass.
-**Conforms to:** CRITERION-SPEC 0.5.0 §6.
+**Conforms to:** CRITERION-SPEC 0.6.0 §6.
 
 This is the specification-by-example and the seed of the validation corpus. Building it and sharpening the checks (`../../SPEC.md` §4) are one motion.
 

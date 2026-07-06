@@ -1,6 +1,6 @@
 # CRITERION-SPEC — Meta-Specification for Anti-Extraction Criteria
 
-**Version:** 0.5.0
+**Version:** 0.6.0
 **Status:** Draft
 **Part of:** No Shit (working title) — see `../no-shit.md`
 
@@ -132,7 +132,7 @@ Each check MUST specify:
 - **BEHAVIORAL** — adjudicated by observing the live product (probe agents: sign up, cancel, export, capture traffic).
 - **EITHER** — both modes can adjudicate this check; the attestation records which one actually did.
 
-Modes are per-**check** deliberately. Some criteria split (`no-surveillance`: tracker/telemetry observation is BEHAVIORAL; internal data-handling and retention logic is CODE). A criterion's advertised `observation_modes` is the union over its checks. An attestation records, per check, which mode produced the result — so a consuming agent can see that (say) the code-tier checks were verified but the behavioral ones were not.
+Modes are per-**check** deliberately. Some criteria split (`no-surveillance`: tracker/telemetry observation is BEHAVIORAL; internal data-handling and retention logic is CODE). A criterion's advertised `observation_modes` is the union over its checks. An attestation records, per check, which mode produced the result — so a consuming agent can see that (say) the code-tier checks were verified but the behavioral ones were not. When more than one mode adjudicates the same check in a single audit, the outcomes join per §4.7. Where a check's deciding facts are unreachable in the mode being run (server-side logic in a code audit), that mode returns `unobserved` for the check rather than guessing.
 
 **Behavioral validity (deferred).** Behavioral attestations are time-bound, with a validity period and a randomized re-probe cadence (design doc, Architecture §7). Whether those are criterion parameters or operator policy is deliberately deferred until the first behavioral criterion reaches `candidate`; if criterion-owned, they will land as manifest fields in a meta-spec bump. Until then they are operator policy.
 
@@ -174,6 +174,16 @@ A check's decision MUST be **total**: every evidence state its procedure can pro
 
 **Statement↔decision parity.** Totality is not enough: a cascade closed by "`pass` otherwise" silently converts every violation shape the `fail` predicate does not enumerate into a pass. The `fail` predicate(s) MUST therefore cover every violation shape the check's **statement** names — if the statement forbids three things, the decision must be able to fail on all three — and when a statement routes a case to another check, that check's decision MUST have a matching predicate. (Finding T-8: after the T-6 cascade rewrite, `no-subscription-trap` checks 1/3/4 each enumerated fewer violation shapes than their statements, and corpus rows labeled FAIL lived in the gaps — forced medium-switch cancellation, a stated effective-date deferral past the paid period, and the unreliable-confirmation case check 1 explicitly hands to check 3.)
 
+### 4.7 Mode join (multi-mode audits)
+
+When an audit runs more than one observation mode and an `either`-mode check is adjudicated by both, the per-mode outcomes MUST join into one per-check outcome by the following **total lattice** — the default every criterion inherits unless it documents an override:
+
+- Among **decided** outcomes, the join is worst-of: `fail` > `conditional` > `pass`. Evidence union, never exoneration: a clean codebase does not exonerate an observed live violation (a server-injected pattern is still what shipped), and an innocent-looking rendered capture does not exonerate coded fabrication (the generator *is* the fabrication).
+- A check **decided in any mode is decided.** `unobserved` in another mode reflects that *mode's* reach, not the check's observability — it never downgrades a decided outcome. `unobserved` survives the join only when **every** mode that ran returned it. (Without this rule, running a second mode could only hurt: a both-modes audit — the design doc's highest assurance tier — would yield strictly weaker verdicts than a single-mode one.)
+- `na` joins only with `na`: if one mode decides the check while another returns `na`, the decided outcome governs — one mode found the surface the other missed.
+
+Confidence joins the same way: a check's `evidence_completeness` (§5.3) is the **max** over the modes that ran; adding a mode never reduces a check's confidence. (Finding T-11, from `no-dark-patterns` — the first multi-mode criterion; its 0.1.0 two-clause "evidence union" rule was not total and had exactly the weaker-verdict edge the second bullet forbids.)
+
 ---
 
 ## 5. Verdict & confidence model
@@ -197,7 +207,7 @@ A FAIL verdict MUST enumerate **all** failing blocking checks the same way — n
 
 ### 5.3 Confidence
 
-Each verdict carries a confidence value derived from (a) inter-model agreement in the consensus round and (b) evidence completeness. The criterion MUST define its confidence bands and the low-confidence threshold below which a result is downgraded to INDETERMINATE and routed for review. Confidence is reported in the attestation and is filterable by delegations (the design doc's "minimum attestation confidence threshold").
+Each verdict carries a confidence value derived from (a) inter-model agreement in the consensus round and (b) evidence completeness. The criterion MUST define its confidence bands and the low-confidence threshold below which a result is downgraded to INDETERMINATE and routed for review. In multi-mode audits, per-check evidence completeness is the max over the modes that ran (§4.7). Confidence is reported in the attestation and is filterable by delegations (the design doc's "minimum attestation confidence threshold").
 
 ---
 
@@ -253,7 +263,7 @@ Rationale: if trained humans reading the same flow cannot agree on the verdict, 
 
 ### 7.2 Validation-study gate (candidate → active)
 
-The reference pipeline runs the criterion against the **sealed** corpus, for **each model pool the criterion's audit artifact will run under**. The enclave-contained pool is code-confidentiality machinery (design doc, Code confidentiality); a purely behavioral criterion — no submitted code — MAY validate against the frontier pool alone and record the enclave pool as not-applicable in its manifest. The criterion MUST publish, per applicable pool:
+The reference pipeline runs the criterion against the **sealed** corpus, for **each model pool each of the criterion's audit artifacts will run under**. The enclave-contained pool is code-confidentiality machinery (design doc, Code confidentiality); a purely behavioral criterion — no submitted code — MAY validate against the frontier pool alone and record the enclave pool as not-applicable in its manifest. **Multi-mode criteria publish cells per (pool × mode artifact)** — a code-mode attestation and a behavioral one are different claims (§8's `{modes}`), and §7.3's record-travels-with-the-claim principle fails if the traveling rate is pooled across modes; the sealed corpus MAY be shared, but each cell a claim can cite is measured against the mode artifact that produces that claim, and re-validation triggers attach per artifact (§9). The criterion MUST publish, per applicable pool (and mode artifact, where they differ):
 
 - false-pass rate (a violating product earns PASS) — **MUST be ≤ ~5%** (illustrative; finalized when the corpus is assembled)
 - false-flag rate (a clean product earns FAIL) — **MUST be ≤ ~10%**
@@ -281,12 +291,12 @@ And it MUST state what it does **not** assert: it is a statement of *process and
 
 ## 9. Audit-artifact binding (prompt bundle or probe script)
 
-The **criterion definition** (this spec) and the **audit artifact** — an over-code **prompt bundle** for code-tier criteria, or a **probe script** for behavioral criteria (what the models are actually asked, or what the probe actually does) — are separate, separately-versioned artifacts, bound together:
+The **criterion definition** (this spec) and its **audit artifacts** — an over-code **prompt bundle** for the CODE mode, a **probe script** for the BEHAVIORAL mode (what the models are actually asked, or what the probe actually does) — are separate, separately-versioned artifacts, bound together:
 
 - `rubric_version` = the versioned bundle of active criterion definitions + confidence thresholds (this document's world).
-- `prompt_version` = the versioned audit artifact (prompt bundle *or* probe script) that operationalizes the checks.
+- `prompt_version` = the versioned audit artifact(s) that operationalized the checks **in the mode(s) actually run**: a criterion binds **one artifact per declared observation mode** (single-mode criteria bind exactly one, as before; a dual-mode criterion binds two — finding T-10, from `no-dark-patterns`). An attestation's `prompt_version` identifies the (mode, artifact-version) pair(s) for the modes that ran; a composite lockstep version is deliberately NOT used — it would force a code-only attestation to cite a probe-script version that never ran, and couple the two artifacts' release cadences. The byte-level encoding of the pair(s) is Stage 1 schema work (design doc, Architecture §4).
 
-A criterion MUST reference the audit-artifact version it was validated against; re-validation (§7.2) is required when either the criterion or its audit artifact changes materially. The audit artifact MUST present all submitted code, content, page/app output, and probe observations to the judges as **quoted untrusted data, never as instructions** (injection hardening, design doc Threat Model §1). The mapping from checks (§4) to prompt sections or probe steps MUST be explicit, so a reader can see which realizes which requirement.
+A criterion MUST reference the audit-artifact version(s) it was validated against; re-validation (§7.2) is required **per artifact** — when the criterion changes materially, or when *that* artifact does. One artifact may re-validate without touching the other's record. The audit artifact MUST present all submitted code, content, page/app output, and probe observations to the judges as **quoted untrusted data, never as instructions** (injection hardening, design doc Threat Model §1). The mapping from checks (§4) to prompt sections or probe steps MUST be explicit, so a reader can see which realizes which requirement.
 
 > Note (meta): the design doc's glossary formerly defined "rubric" as criterion-language + prompts + thresholds as one unit, while the attestation schema carried `rubric_version` and `prompt_version` as separate fields. This spec resolved the conflict by treating them as two bound-but-independently-versioned artifacts; the design-doc glossary and schema were brought into line 2026-07-01.
 
@@ -373,7 +383,13 @@ claim_template: >                  # §8
    audit artifact {prompt_version}, model set {model_set}, modes {modes};
    measured false-pass {fp} / false-flag {ff} on corpus {corpus_hash}."
 
-prompt_bundle: { ref: <uri-or-path>, version: null }   # §9 — the audit artifact: prompt bundle (code) OR probe script (behavioral); key name tracks the attestation's prompt_version field
+prompt_bundle: { ref: <uri-or-path>, version: null }   # §9 — single-mode criteria: the one audit artifact (prompt bundle for code, probe script for behavioral); key name tracks the attestation's prompt_version field
+# Multi-mode criteria bind one artifact per declared mode instead (§9, T-10):
+# prompt_bundle:
+#   code:       { ref: <uri-or-path>, version: null }   # prompt bundle
+#   behavioral: { ref: <uri-or-path>, version: null }   # probe script
+# and their validation cells split per (pool x mode artifact) (§7.2), e.g.:
+#   frontier_pool: { code: { false_pass: null, ... }, behavioral: { false_pass: null, ... } }
 
 provenance:                        # §10
   authors: [ ... ]
@@ -399,7 +415,7 @@ Not every field must be filled to *start*. The normative gate is §2.3; this app
 3. at least the **blocking** `checks`, each with all seven §4.1 fields — `id`, `statement`, `modes`, `evidence`, `procedure`, `decision`, `severity`
 4. `aggregation` and the confidence bands (§4.4, §5 — defaults are fine)
 5. a **public corpus** meeting the category minimums (§6)
-6. the claim language (§8), the audit-artifact binding (§9 — the artifact may be planned, its version null), and §10's authors + sources
+6. the claim language (§8), the audit-artifact binding (§9 — one artifact per declared mode; artifacts may be planned, versions null), and §10's authors + sources
 
 **To reach `candidate`:** all of the above, plus the **human-calibration gate passed** against a pre-registered target (§7.1).
 
@@ -409,6 +425,7 @@ Everything else — sealed corpus, measured validation record, audit-artifact ve
 
 ## Changelog
 
+- **0.6.0** (2026-07-06) — Multi-mode machinery, from authoring and reviewing the first dual-mode criterion (`no-dark-patterns` 0.1.0/0.1.1). **T-10 — one audit artifact per declared mode** (§9): the old "prompt bundle *or* probe script" disjunction could not represent a dual-mode criterion; a criterion now binds one artifact per mode, the attestation's `prompt_version` identifies the (mode, version) pair(s) actually run (no composite lockstep version — a code-only attestation must never cite a probe script that never ran), re-validation attaches per artifact, and §7.2 validation cells split per **(pool × mode artifact)** so measured error rates travel with the claim they describe (§7.3; a code-mode claim must not carry behaviorally-diluted rates). Appendix A shows both manifest shapes — the flat single-artifact form stays legal for single-mode criteria (`no-subscription-trap` unchanged). **T-11 — mode-join lattice** (new §4.7, referenced from §4.2 and §5.3): when both modes adjudicate one check, outcomes join worst-of over decided (`fail` > `conditional` > `pass`); a check decided in any mode is decided — `unobserved` elsewhere never downgrades it (the criterion's own first-draft rule had the perverse edge this forbids: both-modes audits yielding weaker verdicts than single-mode); `unobserved` survives only if every mode that ran returned it; `na` joins only `na`; per-check confidence completeness = max over modes. Overridable per criterion with documentation. Also: §4.2 states that a mode in which a check's deciding facts are unreachable returns `unobserved` rather than guessing; Appendix B item 6 pluralized. Additive for single-mode criteria; the multi-mode rules bind only criteria that declare them (both current criteria are `draft` — T-4 window regardless).
 - **0.5.0** (2026-07-03) — External reviewer pass (pre-publication gate). **The candidate gate was stated three incompatible ways** (§1 table vs §2.3 vs Appendix B); §2.3 is now the single normative statement — §10's authors + sources join it, and "MAY NOT" → MUST NOT — while Appendix B is rewritten as a worklist of the same set (begin-hand-validation vs reach-candidate split; all seven §4.1 check fields named — it had dropped `statement` and `severity`). **Manifest:** `validation.human_calibration` expanded so the §7.1 record is actually representable (pre-registered target, aggregate and hard-subset agreements, `corpus_covered` — now defined in §7.1); `supersedes` defined (§2.1 — new-id discovery pointer; `@>=` filters MUST NOT cross it). **New default rules:** keyword ↔ severity MUST agree (§4.1: MUST → `blocking`, SHOULD → `caveat`, MAY → `advisory`); every-blocking-check-`na` → INDETERMINATE, never a vacuous PASS (§4.4). Also: behavioral validity-period/re-probe-cadence ownership explicitly deferred to the first behavioral `candidate` (§4.2); the manifest declared the criterion's audit-output type, byte encoding deferred to Stage 1 (Appendix A); sealed-corpus and cross-criterion ownership rules now carry MUST NOT keywords (§6.2, §3.3); §9's meta-note set to past tense (the design-doc glossary was fixed 2026-07-01); "non-advisory" qualifier restored in §5.1; confidence bands made half-open at 0.90; §6.3's canary-duty pointer corrected (§10 holds metadata, not duties); `kill_thresholds` marked illustrative in the manifest comment. TEMPLATE: the mandatory **Severity** field added to the check block (it was missing); copy instruction now describes the file → directory split; skeleton synced. Re-verify residue folded in same day: §4.5/§5.1 INDETERMINATE glosses aligned with the new inapplicability route, and `pass_if` now requires at least one applying blocking check. Additive or tightening — the two tightenings (keyword ↔ severity, all-blocking-`na`) are taken in the zero-attestation T-4 window, as 0.4.0's rename was; the one manifest-shape change (`human_calibration`) is migrated by `no-subscription-trap` 0.1.5.
 - **0.4.0** (2026-07-02) — Second review pass. **T-8:** statement↔decision parity — a check's `fail` predicate MUST cover every violation shape its statement names; "`pass` otherwise" cascades were silently converting un-enumerated violations into passes (§4.6). **T-9:** corpus rows are the adjudication substrate and MUST state facts sufficient to decide every check they label (§6.4). Severity level `conditional` renamed **`caveat`** (§4.1, §4.4, §5.1, Appendix A) — it collided with the check *outcome* `conditional` (T-5) and the *verdict* CONDITIONAL; a breaking manifest rename taken now, while the only criterion is `draft` with zero attestations (the T-4 window). FAIL verdicts MUST enumerate all failing blocking checks (§5.2 — calibration finding C-1 promoted to the mold). §7.1 agreement targets MUST be finalized before adjudication begins (stated-in-advance discipline).
 - **0.3.0** (2026-07-01) — Repo review against the design goals. **T-5:** added the fifth check outcome `conditional` (pass-with-named-caveat) that `no-subscription-trap` checks 2/3/5 were already emitting with no legal home (§4.1, §4.4, §4.5, Appendix A); default aggregation now also states that advisory checks never move the verdict and that `unobserved` on non-blocking checks does not downgrade. **T-6:** decisions MUST be total, and SHOULD be cascade-ordered (`na` → `unobserved` → `fail` → `conditional` → `pass`) or have mutually exclusive predicates; corpus disagreement with a decision rule blocks the §7.1 gate (new §4.6). **T-7:** bump semantics attach at first `active` — pre-`active` versions carry no compatibility semantics; first `active` SHOULD be ≥ 1.0.0 (§2.2, completing T-4). Also: §7.2 scoped to the model pools the audit artifact runs under (enclave pool n/a for purely behavioral criteria) and gained a sealed-corpus sizing rule (≥ 3/ε on the measured side; public minimums are calibration floors, not measurement power — §6.1); §7.1 agreement target now stratified with a hard-subset floor (the dry-run's aggregate-masks-structure lesson); added `notification_record` evidence type (§4.3 — checks capturing notices had no enumerated type); §8 and Appendix A claim templates say "audit artifact," finishing T-2's propagation.

@@ -1,7 +1,7 @@
 # `no-dark-patterns` — public corpus
 
 **Status:** meets `candidate` category minimums (46 examples). The remaining gates to `candidate` are the first calibration dry-run (none has run yet — the stress queue is SPEC §12) and the §7 human-calibration pass.
-**Conforms to:** CRITERION-SPEC 0.5.0 §6.
+**Conforms to:** CRITERION-SPEC 0.6.0 §6.
 
 This is the specification-by-example and the seed of the validation corpus. Building it and sharpening the checks (`../../SPEC.md` §4) are one motion.
 
