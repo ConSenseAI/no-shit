@@ -13,8 +13,8 @@ Machine-verifiable, criterion-specific claims about the anti-extraction properti
 | [`criteria/TEMPLATE.md`](criteria/TEMPLATE.md) | Copy-this skeleton for authoring a new criterion | Tracks CRITERION-SPEC |
 | [`criteria/ADJUDICATION.md`](criteria/ADJUDICATION.md) | Instructions for the §7.1 human-calibration gates: what adjudicators do (sendable as-is) and the coordinator protocol — blinded packet prep, scoring, recording | v0.1.0, draft |
 | [`criteria/no-subscription-trap/`](criteria/no-subscription-trap/) | The first criterion: cancellation must be symmetric to signup — spec, machine-readable manifest, labeled public corpus, calibration records | v0.1.8, draft |
-| [`criteria/no-dark-patterns/`](criteria/no-dark-patterns/) | The second criterion: choice interfaces must be honest — no fabricated pressure signals, trick controls, consent asymmetry, or sneaked additions. The first dual-mode (code + behavioral) criterion | v0.1.5, draft |
-| [`criteria/no-lock-in/`](criteria/no-lock-in/) | The third criterion, completing the Stage 0 set: you can leave with your stuff — self-service export in standard formats, complete; self-service deletion that is honored; no obstruction on the way out | v0.1.3, draft |
+| [`criteria/no-dark-patterns/`](criteria/no-dark-patterns/) | The second criterion: choice interfaces must be honest — no fabricated pressure signals, trick controls, consent asymmetry, or sneaked additions. The first dual-mode (code + behavioral) criterion | v0.1.6, draft |
+| [`criteria/no-lock-in/`](criteria/no-lock-in/) | The third criterion, completing the Stage 0 set: you can leave with your stuff — self-service export in standard formats, complete; self-service deletion that is honored; no obstruction on the way out | v0.1.4, draft |
 | [`validation/PROTOCOL.md`](validation/PROTOCOL.md) | The Stage 0 validation-study protocol: corpus and fixture construction, model pools, procedure under test, metrics, and the pre-stated kill criteria — freezes into the study's pre-registration before any execution | v0.1.0, draft |
 
 ## The idea, briefly
