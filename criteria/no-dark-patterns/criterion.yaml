@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-dark-patterns
-version: 0.1.3
+version: 0.1.4
 status: draft                      # draft | candidate | active | deprecated
 title: No Dark Patterns
 supersedes: null
@@ -402,8 +402,8 @@ corpus:                            # §6
   minimums: { clean: 10, violating: 10, boundary: 5, adversarial: 5, injection_canary: 3, defeat_device: 2 }
 
 validation:                        # §7 — nulls until measured; gates status transitions
-  human_calibration:               # §7.1 — target MUST be pre-registered before formal adjudication begins (not yet registered; expected to mirror no-subscription-trap's)
-    target: { aggregate: null, hard_subset: null, registered_at: null }
+  human_calibration:               # §7.1 — target pre-registered at v0.1.4, before any human adjudication
+    target: { aggregate: "Cohen's kappa >= 0.8", hard_subset: ">=80% exact-verdict on boundary+adversarial pooled", registered_at: 2026-07-06 }
     adjudicators: 0
     agreement_aggregate: null
     agreement_hard_subset: null    # boundary+adversarial pooled
@@ -448,6 +448,7 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.4, date: 2026-07-06, change: "7.1 human-calibration target pre-registered: Cohen's kappa >= 0.8 aggregate AND >=80% exact-verdict on boundary+adversarial pooled (registered_at 2026-07-06); no other changes", rationale: "stated-in-advance discipline (CRITERION-SPEC 7.1) — registered after the first dry-run, before any human adjudication; mirrors the sibling's target" }
     - { version: 0.1.3, date: 2026-07-06, change: "first calibration dry-run folded in (calibration-dryrun.md): blind Sonnet+Opus panel, 22 id-stripped scenarios — 22/22 inter-rater (kappa = 1.00), both raters 22/22 vs key, zero underdetermined. P-1: check-4/check-5 ownership line (control's wording vs rendered state). P-2: check-1 seriality wording (promptly-or-recurring-cadence; overnight gap does not break seriality). Section 12 rewritten to probed status; strict positions held under blindness with instinct divergences logged as the human gate's watch-list", rationale: "operationalization evidence at dry-run scale; the two panel findings were the only text gaps found; human_calibration stays 0 — LLM proxy is not the formal gate" }
     - { version: 0.1.2, date: 2026-07-06, change: "conformance migration to CRITERION-SPEC 0.6.0: T-10/T-11 now mold rules (9, 7.2, new 4.7); per-mode prompt_bundle and per-(pool x mode) validation cells are the legal Appendix A shapes; SPEC 11 marked resolved; no check, decision, boundary, or corpus changes", rationale: "the mold adopted this criterion's two findings (with the review's lattice + per-mode-validation refinements); interim framings replaced by mold citations" }
     - { version: 0.1.1, date: 2026-07-06, change: "review pass (blind domain/adversarial reviewer + inline conformance adjudication of all rows). Blocking T-8 fix: check no-visual-interference fail arm covers misrepresented selection state (+viol-syn-fake-selected-state). no-confirmshaming: conditional arm qualified to emotive/judgment-laden loss framing BEYOND factual consequence (+clean-syn-factual-consequence); shaming covers depiction (+adv-syn-emoji-shame). no-trick-wording: fail enumeration non-exhaustive + de-narrowed; inconsistent same-control mappings added (Epic row now literal). choice-symmetry: optional defined normatively (+viol-syn-consent-wall); lifecycle parity — decline persistence (+viol-syn-reject-resets) and consent withdrawal (+viol-syn-unsubscribe-maze, GDPR 7(3)). no-unconsented-additions: inadvertent-activation shape (Epic mis-hit lane). no-fabricated-social-proof: operator-controlled unverifiable aggregates -> unobserved; fail-before-unobserved (permitted 4.6 deviation). no-nagging-after-decline: cross-type aggregate arm >=4 (+bound-syn-prompt-carousel); 14-day denomination. Covered surfaces include product-originated notifications; checks 1-3 gain notification_record. Mode-join restated as total lattice (decided beats unobserved; worst-of decided; na joins na); T-10 extended to per-(pool x mode) validation cells; confidence completeness = max over modes. Ownership with no-subscription-trap restated fact-based (their 0.1.6); reciprocal MUST-excludes for unauthored criteria; no-surveillance relation -> overlaps; forced-enrollment + comparison-prevention non-goals. Corpus 39->46; CNIL dockets corrected (SAN-2021-023/-024); Booking dates precise; FTC captions In-the-Matter-of; guarantee tail softened", rationale: "one blocking statement<->decision gap (T-8), one internal contradiction on the highest-frequency clean shape, wrong enforcement dockets, and a mode-join edge where both-modes audits yielded weaker verdicts than single-mode — all verified against file text before fixing; cheap evasion lanes closed now (notifications, depiction, persistence, mis-hit engineering, type-carousel, unverifiable aggregates), the rest queued to SPEC §12; boundary moves permitted pre-active (T-4/T-7); every new shape carries a corpus anchor; none probed yet" }
