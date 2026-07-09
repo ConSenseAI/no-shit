@@ -1,6 +1,6 @@
 # Human-Calibration Adjudication — Instructions
 
-**Version:** 0.2.0 · **Status:** draft
+**Version:** 0.2.1 · **Status:** draft
 **Serves:** CRITERION-SPEC §7.1 — the calibration gate (draft → candidate), both components: the full-corpus **reliability** panel (human or model adjudicators) and the stratified-sample **human anchor** — for every criterion in this repository.
 
 Part I is written to be sent to adjudicators as-is, together with the per-criterion packet described in Part II. Part II is the coordinator's protocol: packet preparation, scoring, and recording. Nothing in this document reveals expected answers; blindness rests on the packet construction rules and the adjudicator commitments below.
@@ -38,6 +38,7 @@ That is your role. **You are grading the rules, not being graded.** A disagreeme
 ### Independence
 
 - Work alone. No discussion of scenarios or verdicts with the other adjudicator(s), or with the project's authors, until everyone has submitted.
+- **Do the work yourself — no AI assistance of any kind.** Read, decide, and record every verdict personally. Do not have an AI assistant, agent, or model summarize the rules, interpret a scenario, or draft or check a verdict — not even as a second opinion. Model raters serve in their own, separately labeled component; a human seat that quietly delegates to a model converts the human anchor back into a model panel, which defeats the one thing this component measures. (Aids that involve no language model — a dictionary, a spreadsheet for tallying — are fine.)
 - Questions about **process** (missing pages, format confusion) go to the coordinator. Questions about **content** ("does check 3 cover X?") do not — answer them from the rule text, and if the text can't answer, that itself is a divergence/underdetermined note.
 - **Do not consult the project's public repository, or search for the criteria or scenarios online, during adjudication.** The corpus answer labels and prior calibration results are published there; looking would unblind you. The response sheet ends with an attestation line to this effect.
 
@@ -46,7 +47,7 @@ That is your role. **You are grading the rules, not being graded.** A disagreeme
 - Read the rule excerpt in full once before scenario 1. During adjudication it stays open — this is open-book on the rules, closed-book on everything else.
 - Expect a few minutes per scenario once warmed up; budget **3–6 hours per criterion** for a full-corpus packet, or about an hour for a human-anchor sample. Splitting across sittings is fine; one criterion per sitting is recommended. There is no time pressure and accuracy beats speed everywhere.
 - The response sheet, per scenario: `ID · verdict · failing blocking checks (if FAIL) · caveat checks (if CONDITIONAL) · driver (if INDETERMINATE) · underdetermined? + missing facts · rule-vs-instinct divergence · notes`.
-- Attestation (end of sheet): *"I adjudicated these scenarios independently, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors."*
+- Attestation (end of sheet): *"I adjudicated these scenarios independently and personally, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors, and without AI assistance of any kind."*
 
 ---
 
@@ -76,6 +77,7 @@ From the criterion's public corpus (`corpus/public/README.md`), for each row:
 
 - **Inter-human exact-verdict agreement on the sample** against the registered target (`validation.calibration.human_anchor.target`); record `adjudicators`, `sample_size`, `agreement_sample`.
 - Also record `agreement_vs_reliability` — the human panel's agreement with the reliability panel's verdicts on the same rows. A human split the reliability panel sailed through is a finding (likely a shared-model misreading of a perception-laden predicate), not noise.
+- **Sitting:** anchor sittings SHOULD run synchronously with the coordinator (call, shared screen, or in person) — the sample is one sitting precisely so proctoring is cheap; the no-AI rule is enforced by setting, not by detection. Post hoc, `agreement_vs_reliability` doubles as a plausibility check: a human sheet that tracks the model panel's characteristic patterns too perfectly (zero divergence notes on watch-items two model panels flagged) warrants a conversation before it is counted.
 
 ### After scoring
 
@@ -97,6 +99,8 @@ Every round — engineering dry-run or formal gate — publishes, once scoring i
 Adjudicators must be independent — not authors of any criterion, no stake in the outcome, no prior exposure to the corpus labels — and mutually independent (not a pair who will compare notes). The task needs careful reading of normative text, not domain credentials: product, UX-research, QA, legal-adjacent, or engineering backgrounds all work. ≥2 required; 3 gives κ resilience if one submission is unusable. Under the T-13 recomposition, **human recruitment is needed at anchor-sample scale** — one sitting of 15–25 scenarios per criterion — while model adjudicators cover the full-corpus reliability component, chosen for unrelated training lineages and excluding the criterion's authoring lineage.
 
 ## Changelog
+
+- **0.2.1** (2026-07-09) — **no-AI-assistance rule for human seats**, stated before the first counted anchor round (procedure-tightening inside the legitimate window): Part I gains the explicit do-the-work-yourself clause and the attestation extends to "…and without AI assistance of any kind"; Part II gains the synchronous-sitting recommendation and names `agreement_vs_reliability` as the post-hoc plausibility check. Gap class: a T-12-shaped unstated convention — "work alone" reads to a 2026 human as "no other *people*," and the rater-class-neutral 0.2.0 text never said otherwise; a human seat delegating to a model would silently convert the anchor back into a model panel.
 
 - **0.2.0** (2026-07-06) — synced to the CRITERION-SPEC 0.7.0 gate recomposition (T-13): the document now serves both components — full-corpus **reliability** (human or model; counted panels mutually lineage-unrelated and authoring-lineage-independent) and the stratified **human-anchor** sample (≥2 humans, one sitting). Part I made rater-class-neutral; Part II gains sample-packet construction, per-component scoring, and the counted-panel rule; manifest paths updated to `validation.calibration.*`.
 - **0.1.1** (2026-07-06) — the silence instruction in Part I now cites the mold rule it lacked (CRITERION-SPEC §4.5 T-12 — scenario silence is absence; *unobserved* only for stated observation gaps): the first cross-vendor panel had to invent that convention, which is exactly the gap class this document exists to close. Part II gains **roster, record & publication standards**, written after that panel's roster metadata was under-captured (one rater's packet variant and access route: not recorded).
