@@ -1,6 +1,6 @@
 # Validation Study — Protocol
 
-**Version:** 0.1.3 · **Status:** draft — **not frozen; not yet a pre-registration**
+**Version:** 0.1.4 · **Status:** draft — **not frozen; not yet a pre-registration**
 **Serves:** design doc *Threat Model & Validation* (the study design and kill criteria) and *MVP — Stage 0* (deliverable 2); CRITERION-SPEC §7.2 (the candidate → active gate this study runs) and §7.3 (the record that travels with every attestation)
 **Evidence base:** [`notes/audit-accuracy.md`](../notes/audit-accuracy.md) — what is known about maximizing true/false accuracy on claims about software, and why this protocol is shaped the way it is
 
@@ -50,6 +50,8 @@ Fixture classes, per the design doc's selection-bias handling (stated there befo
 Rows are product-level with **per-criterion labels** (a product violating `no-subscription-trap` may be clean for `no-lock-in`); one fixture therefore serves multiple cells. Every criterion's **injection canaries** are carried into the sealed set — a canary that passes blocks that rubric/pool version outright (design doc, Threat Model §1).
 
 **Sealed-corpus discipline:** sized per CRITERION-SPEC §7.2 — at least `3/ε` on the measured side per threshold: **≥60 violating-labeled and ≥30 clean-labeled per criterion** per measured cell (the sealed corpus MAY be shared across a criterion's cells). Never published before the study; the sealed manifest's hash is committed publicly at freeze and the corpus is revealed with the report. The design doc's ~50/~50 sketch is superseded by these sizing floors.
+
+**The build plan for these classes** — the shared fixture platform (virtual clock, messaging capture, state seeding, support personas), host-bench assignments, six build lanes, QA gates, manifest schema, and sequencing to freeze — is drafted at [`FIXTURES.md`](FIXTURES.md) (§12.4); its numeric parameters (budget, QA thresholds, the §12.9 observation parameters) are fixed at freeze.
 
 ### 4.3 Corpus-attainability audit (before thresholds are finalized)
 
@@ -123,14 +125,16 @@ Published regardless of outcome: the frozen protocol and freeze hash; per-cell t
 1. Final kill thresholds, miss budgets, and n per cell — after the §4.3 attainability audit.
 2. Sealed-corpus fold plan and per-fold sizes (§8).
 3. Pool membership lists, with model/version pins (§5).
-4. Fixture build plan and budget — synthetic-variant engineering and defeat-device fixtures are the expected long pole.
+4. Fixture build plan and budget — synthetic-variant engineering and defeat-device fixtures are the expected long pole. **Plan drafted (0.1.4) at [`FIXTURES.md`](FIXTURES.md):** six lanes over a four-service platform; the E4 defeat lane confirmed as the long pole. Remaining for freeze: the dollar budget and QA-gate numerics.
 5. ~~Ground-truth labeling protocol~~ — **resolved (0.1.3, §9):** four label bases (enforcement-exhibit, construction, execution-verified, inspection) each carrying basis/date/scope; builder-independence; two-labeler minimum for inspection-basis; pre-study dispute resolution; label records published post-study.
 6. Contamination-check method and threshold for the public corpora (§4.1).
 7. ~~Behavioral-probe validation placement~~ — **resolved (0.1.3, §3 Q2):** runs inside this study as the behavioral cells + the defeat-device red-team lane; no sibling protocol.
 8. ~~§7.1 adjudicators as study labelers~~ — **resolved (0.1.3, §9):** permitted across disjoint row sets (public corpora vs. sealed corpus); same-fixture label-then-adjudicate forbidden; overlap disclosed.
-9. Observation-procedure parameters surfaced by the attainability audit (`ATTAINABILITY.md` §4): per-rate-fact **trial counts** and decision rules (O-4); pre-registered **observation-window lengths** for every longitudinal fact, per cell (O-1); the **surface-census definition** that scopes absence claims (O-2); **vision-capable judging** as a pool-membership constraint where depiction facts are in scope (O-7, binds §12.3).
+9. Observation-procedure parameters surfaced by the attainability audit (`ATTAINABILITY.md` §4): per-rate-fact **trial counts** and decision rules (O-4); pre-registered **observation-window lengths** for every longitudinal fact, per cell (O-1); the **surface-census definition** that scopes absence claims (O-2); **vision-capable judging** as a pool-membership constraint where depiction facts are in scope (O-7, binds §12.3). **Proposals drafted** at [`FIXTURES.md`](FIXTURES.md) §7 (window registry, census definition, trial structure, vision-pool rule); pinned at freeze.
 
 ## 13. Changelog
+
+- **0.1.4** (2026-07-09) — §12.4's plan half drafted at [`FIXTURES.md`](FIXTURES.md) 0.1.0 (four-service fixture platform, host-bench assignments, six build lanes, pre-registered QA gates including SusBench-style indistinguishability, F0–F3 sequencing, budget shape); §12.9's parameters get drafted proposals there (its §7). §4.2 links the plan. Both items remain open until freeze pins the budget and numerics. No methodology changes.
 
 - **0.1.3** (2026-07-09) — resolves three §12 open parameters on the attainability audit's material: §12.5 → the §9 labeling protocol (four label bases with basis/date/scope, builder-independence, two-labeler inspection minimum, pre-study dispute resolution, post-study label-record publication); §12.7 → probe validation runs in-study as the behavioral cells + red-team lane (§3 Q2); §12.8 → adjudicator/labeler overlap permitted across disjoint row sets with same-fixture exclusion and disclosure (§9). Remaining open: §12 items 1–4, 6, 9.
 
