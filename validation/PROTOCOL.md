@@ -1,6 +1,6 @@
 # Validation Study — Protocol
 
-**Version:** 0.1.1 · **Status:** draft — **not frozen; not yet a pre-registration**
+**Version:** 0.1.2 · **Status:** draft — **not frozen; not yet a pre-registration**
 **Serves:** design doc *Threat Model & Validation* (the study design and kill criteria) and *MVP — Stage 0* (deliverable 2); CRITERION-SPEC §7.2 (the candidate → active gate this study runs) and §7.3 (the record that travels with every attestation)
 **Evidence base:** [`notes/audit-accuracy.md`](../notes/audit-accuracy.md) — what is known about maximizing true/false accuracy on claims about software, and why this protocol is shaped the way it is
 
@@ -54,6 +54,8 @@ Rows are product-level with **per-criterion labels** (a product violating `no-su
 ### 4.3 Corpus-attainability audit (before thresholds are finalized)
 
 The intersection "documented-extractive AND code-inspectable" may be far thinner than the floors require — documented extraction and inspectable ground truth are anti-correlated by construction. So, per the design doc: attainability is audited **first**, the real-world slice is reported (not papered over), synthetic variants fill the shortfall with the caveat attached, and if a credible code-auditable extractive corpus cannot be assembled at all, that finding is published and the protocol's weight shifts to the behavioral tier. Kill thresholds and miss budgets are finalized only after this audit — a pass on an unrepresentative corpus would be worse than a fail.
+
+**The audit is drafted at [`ATTAINABILITY.md`](ATTAINABILITY.md):** demand analysis from the cell matrix, a full observation/fixture classification of all 152 public-corpus rows, findings O-1…O-10 (probe-engine and fixture-platform requirements), and the dated supply survey. Its finding O-10 sharpens this section's worry: the public corpus is 100% attainable *as owned fixtures*; the anti-correlation lands on the **live** side (backend-truth facts unobservable, multi-week windows, rate sampling), which is what the synthetic share ends up pricing.
 
 ## 5. Model pools and cells
 
@@ -117,9 +119,12 @@ Published regardless of outcome: the frozen protocol and freeze hash; per-cell t
 5. Ground-truth labeling protocol: who labels, independence requirements, dispute resolution (§9).
 6. Contamination-check method and threshold for the public corpora (§4.1).
 7. Behavioral-probe validation detail: the design doc validates probe accuracy "separately and more cheaply" — decide whether that runs as a section of this study (current lean: yes, as the behavioral cells + the defeat-device red-team lane) or as a sibling protocol.
-8. Whether §7.1 human-gate adjudicators may also serve as study labelers (independence trade-off vs. calibrated-rater scarcity).
+8. Whether §7.1 human-gate adjudicators may also serve as study labelers (independence trade-off vs. calibrated-rater scarcity). *Sharpened by the T-13 recomposition: the scarce resource is anchor humans, not reliability raters — the trade-off prices accordingly.*
+9. Observation-procedure parameters surfaced by the attainability audit (`ATTAINABILITY.md` §4): per-rate-fact **trial counts** and decision rules (O-4); pre-registered **observation-window lengths** for every longitudinal fact, per cell (O-1); the **surface-census definition** that scopes absence claims (O-2); **vision-capable judging** as a pool-membership constraint where depiction facts are in scope (O-7, binds §12.3).
 
 ## 13. Changelog
+
+- **0.1.2** (2026-07-08) — §4.3 links the drafted corpus-attainability audit (`ATTAINABILITY.md`); §12 gains item 9 (observation-procedure parameters the audit surfaced: rate-fact trial counts, pre-registered window lengths, surface-census definition, vision-capable pool constraint) and an item-8 note syncing the adjudicator/labeler trade-off to the T-13 recomposition. No methodology changes.
 
 - **0.1.1** (2026-07-06) — §1 prerequisite synced to the §7.1 calibration-gate recomposition (CRITERION-SPEC 0.7.0, T-13): reliability component (full corpus, lineage-diverse, human or model) plus human-anchor sample; targets restated. No methodology changes.
 
