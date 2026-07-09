@@ -1,6 +1,6 @@
 # Validation Study — Protocol
 
-**Version:** 0.1.4 · **Status:** draft — **not frozen; not yet a pre-registration**
+**Version:** 0.1.5 · **Status:** draft — **not frozen; not yet a pre-registration**
 **Serves:** design doc *Threat Model & Validation* (the study design and kill criteria) and *MVP — Stage 0* (deliverable 2); CRITERION-SPEC §7.2 (the candidate → active gate this study runs) and §7.3 (the record that travels with every attestation)
 **Evidence base:** [`notes/audit-accuracy.md`](../notes/audit-accuracy.md) — what is known about maximizing true/false accuracy on claims about software, and why this protocol is shaped the way it is
 
@@ -34,9 +34,23 @@ Audit error factors as **observation error × adjudication error** (`notes/audit
 
 ## 4. Corpus and fixtures
 
-### 4.1 Adjudication benchmark
+### 4.1 Adjudication benchmark and contamination checks
 
-The public corpora (~150 labeled rows across the three criteria, versioned) are the Q1 benchmark and already exist. Additions before the study: **contamination checks** — the corpora are public by design, so pool models may have trained on them; the study probes for memorization (models asked to reproduce or identify corpus rows) and reports exposure. Where contamination is found, Q1 confirmation uses held-back paraphrase variants of the affected rows. The corpus-leakage worry applies to this benchmark with full force: memorized rows inflate exactly the factor the dry-runs suggest is solved.
+The public corpora (~150 labeled rows across the three criteria, versioned) are the Q1 benchmark and already exist. They are public by design — first published 2026-07-05 and crawlable since — so the working assumption is that pool-model training exposure is a *when*, not an *if*, and vendor-stated training cutoffs are treated as unverifiable metadata: **every pool model is checked.** Memorized rows inflate exactly the factor the dry-runs suggest is solved; the protocol below (resolves §12.6) bounds detectable exposure and removes its effect from Q1.
+
+**Probe battery** — per pool model × criterion corpus, full corpus, **tools and browsing disabled** (the corpora sit on the public web; a probe that can retrieve is not measuring recall). Run at freeze against the pinned pools; re-run for any pool amendment (§2):
+
+1. **Verbatim continuation.** Each scenario is split at its midpoint and the model prompted to continue the prefix. Fires on a contiguous verbatim match ≥ 20 tokens or ROUGE-L ≥ 0.6 against the held-out suffix — the rows' fictional product names and specific values make suffixes high-entropy, so competence cannot reconstruct them.
+2. **Membership quiz** (DCQ-style — Golchin & Surdeanu, TACL 2025 — adapted). The true row text is presented among three sealed **same-facts paraphrases**; the model picks which appeared in the published corpus. All options carry identical deciding facts, so knowledge of the underlying enforcement case cannot answer — only surface-form memory can — which makes the probe valid on enforcement-anchored rows, where "knows the FTC case" is expected and is not contamination. Fires on above-chance selection over the corpus (one-sided binomial against 25%, p < 0.05).
+3. **Metadata recall.** Given a scenario's text and corpus context, the model is asked for the row's `example_id`, expected verdict, and failing checks. Corroborating signal only — IDs are semi-descriptive and partially guessable from content — scored as an exact multi-field match.
+
+**What is deliberately not a signal: verdict accuracy without the rules.** The rows were written to be decidable (T-9), so a capable model scores well uncontaminated. Label leakage is measured only by the **paraphrase differential**: the model adjudicates original and paraphrased rows under the real rules, and a significant original-minus-paraphrase exact-verdict gap (one-sided paired test, p < 0.05, stratified sample ≥ 30 rows) fires at corpus level.
+
+**Decision rule.** Row-level: probe 1 fires, or probe 3 matches exactly → the row is *exposed* for that model. Corpus-level: probe 2 fires, or the paraphrase differential fires, or > 5% of rows are row-level exposed → the corpus is *exposed* for that model. Consequences: exposure is reported per model × criterion regardless of magnitude (§11); for exposed rows and corpora, that model's Q1 numbers are computed on the paraphrase variants as primary, with original-row numbers reported as secondary. The triggers are deliberately conservative — the remediation is cheap, so a false flag costs little and a false clear costs the benchmark — and the numeric fire thresholds are finalized together with the pool pins at freeze (§12.3).
+
+**Paraphrase-set discipline.** A full held-back paraphrase set is built at freeze: every row re-surfaced with every deciding fact and the expected verdict preserved, verified by someone other than its author (a paraphrase that shifts a deciding fact is a benchmark bug, fixed before use); the generating model is disclosed and excluded from the pools. The set stays sealed until the report publishes it — publication burns it, and any later re-check regenerates fresh variants.
+
+**Limitation, stated in advance:** a clean battery does not prove absence — models can be shaped by training exposure without extractable recall. The battery bounds *detectable* memorization; the paraphrase differential catches the non-extractable remainder where it matters (labels); residual undetected exposure is a stated Q1 caveat, not a silent assumption.
 
 ### 4.2 Observation fixtures and the sealed corpus
 
@@ -127,12 +141,14 @@ Published regardless of outcome: the frozen protocol and freeze hash; per-cell t
 3. Pool membership lists, with model/version pins (§5).
 4. Fixture build plan and budget — synthetic-variant engineering and defeat-device fixtures are the expected long pole. **Plan drafted (0.1.4) at [`FIXTURES.md`](FIXTURES.md):** six lanes over a four-service platform; the E4 defeat lane confirmed as the long pole. Remaining for freeze: the dollar budget and QA-gate numerics.
 5. ~~Ground-truth labeling protocol~~ — **resolved (0.1.3, §9):** four label bases (enforcement-exhibit, construction, execution-verified, inspection) each carrying basis/date/scope; builder-independence; two-labeler minimum for inspection-basis; pre-study dispute resolution; label records published post-study.
-6. Contamination-check method and threshold for the public corpora (§4.1).
+6. ~~Contamination-check method and threshold for the public corpora~~ — **resolved (0.1.5, §4.1):** tool-less probe battery per pool model (verbatim continuation; same-facts membership quiz; metadata recall as corroboration) plus the paraphrase differential for label leakage; two-tier row/corpus decision rule with conservative triggers; exposed rows re-measured on the sealed paraphrase set; exposure reported per model × criterion. Numeric fire thresholds finalize with the pool pins at freeze.
 7. ~~Behavioral-probe validation placement~~ — **resolved (0.1.3, §3 Q2):** runs inside this study as the behavioral cells + the defeat-device red-team lane; no sibling protocol.
 8. ~~§7.1 adjudicators as study labelers~~ — **resolved (0.1.3, §9):** permitted across disjoint row sets (public corpora vs. sealed corpus); same-fixture label-then-adjudicate forbidden; overlap disclosed.
 9. Observation-procedure parameters surfaced by the attainability audit (`ATTAINABILITY.md` §4): per-rate-fact **trial counts** and decision rules (O-4); pre-registered **observation-window lengths** for every longitudinal fact, per cell (O-1); the **surface-census definition** that scopes absence claims (O-2); **vision-capable judging** as a pool-membership constraint where depiction facts are in scope (O-7, binds §12.3). **Proposals drafted** at [`FIXTURES.md`](FIXTURES.md) §7 (window registry, census definition, trial structure, vision-pool rule); pinned at freeze.
 
 ## 13. Changelog
+
+- **0.1.5** (2026-07-09) — resolves §12.6: §4.1 becomes the contamination-check protocol — every-pool-model scoping (vendor cutoffs treated as unverifiable), tool-less probe battery (verbatim continuation; membership quiz adapted from the Data Contamination Quiz with same-facts paraphrase options so case knowledge cannot answer; metadata recall as corroboration), the paraphrase differential as the only valid label-leakage signal (the rows are decidable by competence, so raw verdict accuracy proves nothing), a two-tier row/corpus decision rule with deliberately conservative triggers (the remediation is cheap), and the sealed fact-preserving paraphrase set (independently verified, generator disclosed and pool-excluded, burned by publication).
 
 - **0.1.4** (2026-07-09) — §12.4's plan half drafted at [`FIXTURES.md`](FIXTURES.md) 0.1.0 (four-service fixture platform, host-bench assignments, six build lanes, pre-registered QA gates including SusBench-style indistinguishability, F0–F3 sequencing, budget shape); §12.9's parameters get drafted proposals there (its §7). §4.2 links the plan. Both items remain open until freeze pins the budget and numerics. No methodology changes.
 
