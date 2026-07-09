@@ -1,6 +1,6 @@
 # `no-subscription-trap` — No Subscription Trap
 
-**Version:** 0.1.10 · **Status:** draft
+**Version:** 0.1.11 · **Status:** draft
 **Conforms to:** CRITERION-SPEC 0.7.0 (`../CRITERION-SPEC.md`)
 **Observation mode:** behavioral (single-mode — see §4)
 
@@ -130,14 +130,16 @@ Seed corpus and provenance discipline live in `./corpus/public/README.md`. Two r
 
 ## 7. Validation record (§7)
 
-`status: draft` — nothing is measured yet. Path to promotion:
+`status: draft` — the §7.1(a) reliability component is measured and **passed** (2026-07-09, below); the §7.1(b) human anchor is pending. Path to promotion:
 
 - **draft → candidate:** author the public corpus to the manifest minimums; pass the **calibration gate** (CRITERION-SPEC §7.1, recomposed at 0.7.0 — T-13). **(a) Reliability:** ≥2 blinded adjudicators (human or model), counted panel mutually lineage-unrelated and independent of the authoring lineage, over the full corpus, against the registered thresholds (fixed at v0.1.3): **Cohen's κ ≥ 0.8 aggregate AND ≥80% exact-verdict on the boundary+adversarial subset pooled.** (The earlier "or ≥90% exact-verdict" alternative was dropped at registration — a gate metric chosen after the results is not a gate.) **(b) Human anchor:** ≥2 independent humans over the stratified sample (all boundary+adversarial rows, the §12 watch-items, a stated random slice) against **≥80% exact-verdict on the sample** (registered 2026-07-06, before any counted round). The 2026-07-06 cross-vendor panel predates this recomposition, included an author-lineage rater, and is not counted. If calibrated readers can't agree, the checks are under-specified — fix §4, do not proceed. This is the cheap keystone (A1) pre-test.
 - **candidate → active:** run the validation study on the sealed corpus for each applicable model pool — likely the frontier pool alone: this criterion is purely behavioral, no submitted code, so the enclave-contained pool's confidentiality rationale does not apply (CRITERION-SPEC §7.2). Publish per-pool false-pass / false-flag / indeterminate / agreement / cost. Kill thresholds: false-pass ≤ ~5%, false-flag ≤ ~10%; sealed set sized ≥ 3/ε per side (≥60 violating, ≥30 clean). Only then may attestations issue.
 
 Behavioral note: probe accuracy sits close to ground truth (observing a flow, not judging code), so the harder validation target here is **defeat-device red-teaming** (§9) rather than semantic false-flags.
 
-**Calibration dry-run (proxy — not the formal §7.1 gate):** documented in `calibration-dryrun.md`. Ordinary examples reproduce the intended verdicts at ~100% (two blind panels, 35/35 each), and a model-diverse Sonnet+Opus panel over all 40 items (the 35 plus five *engineered-ambiguous* probes) reached κ = 0.87 (37/40), with all three disagreements landing on probe check-boundaries (§12). A third run — the first **cross-vendor** panel (Claude + GPT-5), over the **full 42-row corpus** as formally blinded packets (`calibration/panel-2026-07-06/`) — reached **42/42 (κ = 1.00), both raters 42/42 vs the key, zero underdetermined**, with the deliberate strict positions held rule-over-instinct on an unrelated lineage; three T-9 row-fact gaps fixed at 0.1.9, and the silence-semantics convention both raters had to invent promoted to the mold (T-12 → CRITERION-SPEC 0.6.1). The panel predates the T-13 recomposition and included an author-lineage rater, so it is not counted; the manifest's `calibration` records stay unpopulated.
+**Calibration dry-run (proxy — not the formal §7.1 gate):** documented in `calibration-dryrun.md`. Ordinary examples reproduce the intended verdicts at ~100% (two blind panels, 35/35 each), and a model-diverse Sonnet+Opus panel over all 40 items (the 35 plus five *engineered-ambiguous* probes) reached κ = 0.87 (37/40), with all three disagreements landing on probe check-boundaries (§12). A third run — the first **cross-vendor** panel (Claude + GPT-5), over the **full 42-row corpus** as formally blinded packets (`calibration/panel-2026-07-06/`) — reached **42/42 (κ = 1.00), both raters 42/42 vs the key, zero underdetermined**, with the deliberate strict positions held rule-over-instinct on an unrelated lineage; three T-9 row-fact gaps fixed at 0.1.9, and the silence-semantics convention both raters had to invent promoted to the mold (T-12 → CRITERION-SPEC 0.6.1). The panel predates the T-13 recomposition and included an author-lineage rater, so it is not counted.
+
+**Counted reliability panel (2026-07-09) — §7.1(a) PASSED:** the first counted round: GPT-5.5 + Gemini 3.5 Flash (mutually lineage-unrelated; neither authoring-lineage), full 42-row corpus as fresh-seed blinded packets — **42/42 (κ = 1.000)**, hard subset 11/11, both raters 42/42 vs the key, coverage 1.00; both v0.1.3 thresholds met. Evidence: `calibration/panel-2026-07-09/`; the manifest's `calibration.reliability` record is populated. The separate-attempt recurrence cap drew its third consecutive rule-over-instinct log — retained as a human-anchor watch-item. **The gate stays open until the human anchor (b) passes.**
 
 ## 8. Claim language (§8)
 

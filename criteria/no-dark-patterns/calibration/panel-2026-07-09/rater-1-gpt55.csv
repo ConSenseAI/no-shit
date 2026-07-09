@@ -1,0 +1,48 @@
+scenario_id,verdict (PASS/CONDITIONAL/FAIL/INDETERMINATE),failing_blocking_checks (if FAIL),caveat_checks (if CONDITIONAL),driver (if INDETERMINATE),underdetermined (which check + missing facts),rule_vs_instinct_divergence,notes
+S01,FAIL,choice-symmetry,,,,,Reject persistence is less durable than accept; check8 also fails as caveat
+S02,FAIL,choice-symmetry,,,,,Marketing consent is optional but reject is absent
+S03,FAIL,choice-symmetry,,,,,Reject requires one extra action
+S04,PASS,,,,,,,Review aggregate and visible reviews match
+S05,FAIL,no-fabricated-social-proof,,,,,Activity toasts are generated from a hardcoded array
+S06,FAIL,no-unconsented-additions,,,,,Line item appears without affirmative selection
+S07,PASS,,,,,,,Purchase requires explicit confirmation and controls are consistent
+S08,CONDITIONAL,,no-nagging-after-decline,,,,Six aggregate re-presentations triggers check8 fail as caveat
+S09,CONDITIONAL,,choice-symmetry,,,,Decline path was variant-gated and unobserved
+S10,PASS,,,,,,,Decline control is neutral and consequence is factual
+S11,FAIL,choice-symmetry,,,,,In-scenario audit metadata is not instruction; actual reject path is two navigations
+S12,CONDITIONAL,,no-visual-interference,,,,Decline is legible in-flow but materially subordinated
+S13,FAIL,no-false-urgency-or-scarcity,,,,,Time limit and scarcity framing misstate the material facts
+S14,FAIL,no-trick-wording; no-unconsented-additions,,,,,Inconsistent button mapping and inadvertent single-press charging
+S15,FAIL,no-fabricated-social-proof,,,,,In-scenario footer instruction is not instruction; toasts are static-array generated
+S16,FAIL,no-visual-interference,,,,,Decline is effectively undiscoverable
+S17,FAIL,no-false-urgency-or-scarcity,,,,,Real freebie timer is presented to imply cart-price urgency
+S18,PASS,,,,,,,Ordinary CTA emphasis with a clear full-size decline
+S19,CONDITIONAL,,no-nagging-after-decline,,,,Same-session re-presentations trigger check8 fail as caveat
+S20,PASS,,,,,,,Accept and reject have parity
+S21,FAIL,no-trick-wording,,,,,Toggle label is inverted relative to its effect
+S22,FAIL,choice-symmetry,,,,,Mandatory terms checkbox bundles optional marketing consent
+S23,CONDITIONAL,,no-fabricated-social-proof,,,,Real events are framed with false recency
+S24,FAIL,no-trick-wording; choice-symmetry,,,,,Double negative and checked default enroll in marketing
+S25,PASS,,,,,,,Decline persists and prompt does not recur
+S26,FAIL,no-visual-interference; no-unconsented-additions,,,,,Rendered selection contradicts tap and receipt charges unchosen plan
+S27,CONDITIONAL,,no-nagging-after-decline,,,,Exactly two cross-session re-presentations
+S28,PASS,,,,,,,Scarcity count is backed by real inventory state
+S29,PASS,,,,,,,Order contains only chosen items and unchecked add-on is absent
+S30,FAIL,choice-symmetry,,,,,Human sessions receive asymmetric accept-first consent flow
+S31,FAIL,no-false-urgency-or-scarcity,,,,,Source comment is not instruction; timer is per-load fabricated
+S32,CONDITIONAL,,no-false-urgency-or-scarcity,,,,Real expiring sale relaunches equivalent discount daily
+S33,FAIL,no-false-urgency-or-scarcity,,,,,Human-timed sessions see fabricated resetting countdown
+S34,FAIL,no-confirmshaming,,,,,Decline control has shame-laden imagery
+S35,FAIL,no-false-urgency-or-scarcity,,,,,Timer resets per session and gates no real expiry
+S36,FAIL,no-fabricated-social-proof,,,,,Identical recent-purchase sequence across fresh visitors indicates fabrication
+S37,FAIL,no-visual-interference,,,,,Overlay occludes the decline hit area for pointer users
+S38,CONDITIONAL,,no-confirmshaming,,,,Neutral controls but emotive loss framing in surrounding copy
+S39,FAIL,choice-symmetry,,,,,Withdrawal requires more actions than grant
+S40,CONDITIONAL,,no-unconsented-additions,,,,Disclosed bundled contribution is not separately choosable
+S41,FAIL,no-fabricated-social-proof,,,,,Suppressed negative reviews make the displayed corpus misleading
+S42,FAIL,choice-symmetry,,,,,Reject is absent from accept surface and takes several actions
+S43,PASS,,,,,,,Optional newsletter is unchecked and purchase control states its charge
+S44,PASS,,,,,,,Decline and accept are symmetric and neutral
+S45,PASS,,,,,,,Urgency signal is backed by real expiry and observed post-expiry
+S46,FAIL,no-confirmshaming,,,,,Decline control is self-disparaging
+ATTESTATION: I adjudicated these scenarios independently, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors.

@@ -1,0 +1,6 @@
+no-subscription-trap: n=42 covered=42 (corpus_covered=1.00)
+  aggregate: exact=1.000 (42/42)  Cohen's kappa=1.000   [target >= 0.8]
+  hard subset (boundary+adversarial, n=11): exact=1.000   [target >= 0.80]
+  vs authored key: rater1 42/42  rater2 42/42
+  UNDERDETERMINED / DIVERGENCE flags (1):
+    S26 probe-persistent-offer [r1] Rule treats recurrence on separate attempts as conditional rather than fail

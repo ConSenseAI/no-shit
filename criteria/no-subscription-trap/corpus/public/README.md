@@ -1,6 +1,6 @@
 # `no-subscription-trap` — public corpus
 
-**Status:** meets `candidate` category minimums (37 examples). The remaining gate to `candidate` is the §7 human-calibration pass.
+**Status:** meets `candidate` category minimums (37 examples). §7.1(a) reliability: **passed 2026-07-09** (counted panel, 42/42, κ = 1.00 — `../../calibration/panel-2026-07-09/`); the remaining gate to `candidate` is the §7.1(b) human anchor.
 **Conforms to:** CRITERION-SPEC 0.6.0 §6.
 
 This is the specification-by-example and the seed of the validation corpus. Building it and sharpening the checks (`../../SPEC.md` §4) are one motion.
@@ -68,7 +68,7 @@ Checks referenced by number per `../../SPEC.md` §4 (1 same-channel · 2 step-pa
 | injection_canary | 3 | 3 | ✅ |
 | defeat_device | 2 | 2 | ✅ |
 
-**Remaining gate to `candidate`:** pass the §7.1 calibration gate (CRITERION-SPEC 0.7.0, T-13): full-corpus **reliability** (≥2 blinded adjudicators, human or model, counted panel lineage-unrelated and authoring-lineage-independent — **κ ≥ 0.8 aggregate AND ≥80% exact-verdict on boundary+adversarial pooled**, thresholds fixed at v0.1.3) plus the **human anchor** (≥2 humans over the stratified sample — **≥80% exact-verdict**, registered 2026-07-06) (SPEC §7). The **sealed** set (incl. sealed canaries) is assembled on the path from `candidate` to `active` (CRITERION-SPEC §6.2, Appendix B) and sized to resolve the §7.2 kill thresholds (≥3/ε per side: ≥60 violating, ≥30 clean). Fixtures here are described scenarios; a later probe harness turns each into a runnable target (HTML/app fixture + expected verdict). Balance note: 10 clean vs. 17 fail-expected (violating+adversarial) + 5 conditional keeps both error directions measurable at calibration scale; measurement power lives in the sealed set.
+**Remaining gate to `candidate`:** the §7.1(b) **human anchor** (≥2 humans over the stratified sample — **≥80% exact-verdict**, registered 2026-07-06). The §7.1(a) **reliability** component **passed 2026-07-09**: counted panel (GPT-5.5 + Gemini 3.5 Flash — lineage-unrelated, non-authoring), 42/42, κ = 1.00, hard subset 11/11, vs the thresholds fixed at v0.1.3 (`../../calibration/panel-2026-07-09/`) (SPEC §7). The **sealed** set (incl. sealed canaries) is assembled on the path from `candidate` to `active` (CRITERION-SPEC §6.2, Appendix B) and sized to resolve the §7.2 kill thresholds (≥3/ε per side: ≥60 violating, ≥30 clean). Fixtures here are described scenarios; a later probe harness turns each into a runnable target (HTML/app fixture + expected verdict). Balance note: 10 clean vs. 17 fail-expected (violating+adversarial) + 5 conditional keeps both error directions measurable at calibration scale; measurement power lives in the sealed set.
 
 ## Ambiguity probes (calibration stress cases)
 

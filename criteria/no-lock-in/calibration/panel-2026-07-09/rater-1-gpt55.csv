@@ -1,0 +1,66 @@
+scenario_id,verdict (PASS/CONDITIONAL/FAIL/INDETERMINATE),failing_blocking_checks (if FAIL),caveat_checks (if CONDITIONAL),driver (if INDETERMINATE),underdetermined (which check + missing facts),rule_vs_instinct_divergence,notes
+S01,FAIL,no-exit-flow-obstruction,,,,,Confirmshaming as only proceed control
+S02,PASS,,,,,,Deletion boundary and messaging observed cleanly
+S03,PASS,,,,,,Lawful retention disclosed at deletion and account dead
+S04,CONDITIONAL,,self-service-deletion,,,,Identity demand exceeds password-only login strength
+S05,PASS,,,,,,Reliable non-expiring automated confirmation link is allowed
+S06,FAIL,no-exit-flow-obstruction,,,,,Expiring and unreliable export delivery mechanics
+S07,FAIL,no-exit-flow-obstruction,,,,,Mandatory multi-screen detour before delete control
+S08,PASS,,,,,,Media originals plus metadata sidecars are standard and complete
+S09,PASS,,,,,,Immediate terminal deletion honored cleanly
+S10,CONDITIONAL,,deletion-honored,,,,Single residual promotional message past wind-down horizon
+S11,CONDITIONAL,,export-completeness,,,,Content present but reconstruction metadata dropped
+S12,CONDITIONAL,,no-exit-flow-obstruction,,,,One dismissible retention offer in deletion flow
+S13,PASS,,,,,,Automated timely export with reliable delivery
+S14,PASS,,,,,,In-medium self-service deletion with no retention interventions
+S15,PASS,,,,,,Deletion flow surfaces export before terminal action
+S16,FAIL,deletion-honored,,,,,Recurring promotional emails after stated wind-down
+S17,FAIL,self-service-export;export-completeness,,,,,Downgraded account archive paywalled and omitted
+S18,FAIL,no-exit-flow-obstruction,,,,,Human-timed sessions receive four-interstitial gauntlet
+S19,FAIL,export-completeness,,,,,Uploads directory absent despite audit-note file
+S20,CONDITIONAL,,self-service-deletion,,,,Deletion completion deferred beyond 30 days but not beyond 90
+S21,FAIL,self-service-export,,,,,Current-tier export gated behind paid upgrade
+S22,PASS,,,,,,Immediate current-tier CSV and JSON export at no charge
+S23,CONDITIONAL,,self-service-export,,,,Self-service request but human-mediated fulfillment
+S24,FAIL,self-service-export,,,,,Stated export completion exceeds 90 days
+S25,FAIL,self-service-export,,,,,Export available only through human-mediated support
+S26,FAIL,export-completeness,,,,,Documents and uploads absent from export
+S27,FAIL,no-exit-flow-obstruction,,,,,Five interstitials and mandatory free-text reason
+S28,PASS,,,,,,Self-service standard complete export with metadata intact
+S29,CONDITIONAL,,self-service-export;standard-export-format;export-completeness,,,,Pending export window closed before stated completion elapsed
+S30,FAIL,self-service-deletion,,,,,Deletion requires a different medium than the account uses
+S31,FAIL,standard-export-format,,,,,Structured product exports only flattened PDFs
+S32,FAIL,deletion-honored,,,,,Passive tracking-pixel open cancels pending deletion
+S33,FAIL,standard-export-format,,,,,Primary content type exported only as undocumented binary
+S34,FAIL,deletion-honored,,,,,Login after recovery window silently restores account
+S35,FAIL,export-completeness,,,,,Residential human-timed exports omit uploads
+S36,PASS,,,,,,No retention interventions in export or deletion flows
+S37,CONDITIONAL,,deletion-honored,,,,Post-window deletion boundary not observable within window
+S38,FAIL,no-exit-flow-obstruction,,,,,Per-item-only export with no bulk path is disproportionate
+S39,FAIL,export-completeness,,,,,Collections truncated to first 20 items
+S40,FAIL,no-exit-flow-obstruction,,,,,Pre-checked keep-data option in deletion flow
+S41,FAIL,no-exit-flow-obstruction,,,,,Expiring and unreliable deletion confirmation link
+S42,FAIL,self-service-deletion,,,,,Delete control gated behind plan reactivation and payment details
+S43,FAIL,no-exit-flow-obstruction,,,,,Declined retention offer reappears in same attempt
+S44,FAIL,deletion-honored,,,,,Audit metadata ignored because account restores post-window
+S45,CONDITIONAL,,standard-export-format,,,,Documented custom XML is nonstandard but reader-sufficient
+S46,FAIL,self-service-deletion,,,,,No self-service deletion path exists
+S47,CONDITIONAL,,pre-deletion-export-prompt,,,,Deletion reaches terminal action without surfacing export
+S48,FAIL,standard-export-format,,,,,Undocumented same-vendor-only proprietary archive
+S49,FAIL,deletion-honored,,,,,Covered recordings and transcripts persisted after deletion requests
+S50,CONDITIONAL,,self-service-export,,,,Automated export stated completion exceeds 30 days but not 90
+S51,CONDITIONAL,,self-service-export,,,,Self-service request fulfilled by staff
+S52,FAIL,no-exit-flow-obstruction,,,,,Scenario audit note is product text and links are unreliable
+S53,FAIL,deletion-honored,,,,,Terms contradict deletion by retaining accounts indefinitely
+S54,FAIL,self-service-deletion,,,,,Deletion requires scheduling a human call
+S55,FAIL,standard-export-format,,,,,Standard JSON wrapper contains opaque proprietary payloads
+S56,FAIL,export-completeness,,,,,File uploads are a material content type absent from export
+S57,FAIL,self-service-deletion,,,,,Mandatory cancel-first prerequisite is phone-only
+S58,PASS,,,,,,Settling existing owed balance is not a deletion payment gate
+S59,PASS,,,,,,Workspace export is self-service and complete on current plan
+S60,FAIL,no-exit-flow-obstruction,,,,,Stated export completion elapsed repeatedly with no artifact
+S61,FAIL,no-exit-flow-obstruction,,,,,Delete control rendered but not interactable
+S62,FAIL,self-service-export,,,,,Account holds data but no export path exists
+S63,PASS,,,,,,Cancel-first prerequisite is self-service and immediately unlocks deletion
+S64,FAIL,deletion-honored,,,,,Recurring retention messages during pending recovery window
+ATTESTATION: I adjudicated these scenarios independently, from the rule excerpt and scenario text alone, without consulting the repository, the other adjudicator(s), or the authors.

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: CC-BY-4.0 OR Apache-2.0
 # SPDX-FileCopyrightText: 2026 Consense
 id: no-lock-in
-version: 0.1.6
+version: 0.1.7
 status: draft                      # draft | candidate | active | deprecated
 title: No Lock-In
 supersedes: null
@@ -397,10 +397,14 @@ validation:                        # §7 — nulls until measured; gates status 
   calibration:                     # §7.1 (CRITERION-SPEC 0.7.0, T-13) — two components; targets pre-registered before any counted round
     reliability:                   # (a) full corpus; counted panel >=2 blinded adjudicators, mutually lineage-unrelated, authoring-lineage-independent (human or model)
       target: { aggregate: "Cohen's kappa >= 0.8", hard_subset: ">=80% exact-verdict on boundary+adversarial pooled", registered_at: 2026-07-06 }   # thresholds as originally registered; rater-class clause recomposed 2026-07-06 (T-4 window); the 2026-07-06 author-lineage panel is not counted
-      adjudicators: 0
-      agreement_aggregate: null
-      agreement_hard_subset: null  # boundary+adversarial pooled
-      corpus_covered: null         # fraction of public-corpus rows adjudicated (SHOULD be 1.0)
+      # PASSED 2026-07-09 — counted panel: GPT-5.5 (OpenAI) + Gemini 3.5 Flash (Google), mutually
+      # lineage-unrelated, authoring-lineage-independent; exact 59/64 (0.922); all 5 disagreements
+      # classified misread (single-rater, systematic: T-12 silence on clean deletion rows), no rule
+      # gap, no row bug. Evidence: ./calibration/panel-2026-07-09/. Gate open pending human_anchor.
+      adjudicators: 2
+      agreement_aggregate: 0.862   # Cohen's kappa — target met
+      agreement_hard_subset: 1.00  # boundary+adversarial pooled, 22/22 — target met
+      corpus_covered: 1.00         # fraction of public-corpus rows adjudicated (SHOULD be 1.0)
     human_anchor:                  # (b) >=2 independent humans; stratified sample (all boundary+adversarial rows + watch-items + stated random slice)
       target: { sample: ">=80% exact-verdict on the stratified sample", registered_at: 2026-07-06 }
       adjudicators: 0
@@ -436,6 +440,7 @@ provenance:                        # §10
   delegation_inclusion_count: null
   overturn_rate: null
   changelog:
+    - { version: 0.1.7, date: 2026-07-09, change: "first COUNTED §7.1(a) reliability panel (GPT-5.5 + Gemini 3.5 Flash — mutually lineage-unrelated, neither authoring-lineage; fresh-seed blinded packets, full 64-row corpus): exact 59/64 (0.922), kappa 0.862, hard subset 22/22, rater1 64/64 / rater2 59/64 vs key, coverage 1.00 — both registered thresholds met, component PASSED. All five disagreements one systematic single-rater misread (T-12 silence treated as unobserved on clean completed-deletion rows — the live-audit default imported into corpus adjudication); no rule gap, no row bug; retained as a human-anchor watch-item. Evidence: calibration/panel-2026-07-09/. No check, decision, or corpus changes; gate open pending human_anchor", rationale: "the imperfection is informative — T-12's pull is real even when the rule is stated in the instructions, which is exactly the perception-shaped fragility the human anchor exists to stress" }
     - { version: 0.1.6, date: 2026-07-06, change: "7.1 recomposition migration (CRITERION-SPEC 0.7.0, T-13): human_calibration -> calibration.{reliability, human_anchor}; reliability thresholds carried (registered 2026-07-06); human-anchor sample target >=80% exact-verdict registered 2026-07-06, stratum subsumes the v0.1.3 watch-list rule; the 2026-07-06 cross-vendor panel not counted; no check, decision, or corpus changes", rationale: "watch-list boundaries and hard categories concentrate the human anchor where judgment is fragile" }
     - { version: 0.1.5, date: 2026-07-06, change: "cross-vendor panel run 2 (Claude + GPT-5, full 64-row corpus, blinded packets): 64/64 kappa 1.00, both 64/64 vs key. Watch-list combined-flow targeting question surfaced as predicted on bound-syn-single-offer; row now states pitch target + no-subscription-pitch (targeting rule literally decidable). Conforms-to 0.6.1 (T-12, additive). Evidence: calibration/panel-2026-07-06/", rationale: "one row-fact sharpening, no decision changes; the watch-list predicted exactly where ambiguity would surface — the calibration machinery working; human_calibration stays 0" }
     - { version: 0.1.4, date: 2026-07-06, change: "corpus README status prose synced (dry-run recorded at 0.1.2, 7.1 target registered at 0.1.3 — the README still described both as pending); no row, check, decision, or label changes", rationale: "public record consistency; the registration commit touched SPEC and manifest but missed the corpus README's status narration" }

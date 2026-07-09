@@ -1,0 +1,85 @@
+no-lock-in: n=64 covered=64 (corpus_covered=1.00)
+  aggregate: exact=0.922 (59/64)  Cohen's kappa=0.862   [target >= 0.8]
+  hard subset (boundary+adversarial, n=22): exact=1.000   [target >= 0.80]
+  vs authored key: rater1 64/64  rater2 59/64
+  INTER-RATER DISAGREEMENTS (5):
+    S05 clean-syn-email-confirm-delete [clean] key=PASS r1=PASS r2=CONDITIONAL
+      r1: Reliable non-expiring automated confirmation link is allowed
+      r2: deletion-honored
+    S14 clean-syn-simple-delete [clean] key=PASS r1=PASS r2=CONDITIONAL
+      r1: In-medium self-service deletion with no retention interventions
+      r2: deletion-honored
+    S36 clean-syn-zero-offer-exit [clean] key=PASS r1=PASS r2=CONDITIONAL
+      r1: No retention interventions in export or deletion flows
+      r2: deletion-honored
+    S58 clean-syn-unpaid-balance-settle [clean] key=PASS r1=PASS r2=CONDITIONAL
+      r1: Settling existing owed balance is not a deletion payment gate
+      r2: deletion-honored
+    S63 clean-syn-cancel-then-delete [clean] key=PASS r1=PASS r2=CONDITIONAL
+      r1: Cancel-first prerequisite is self-service and immediately unlocks deletion
+      r2: deletion-honored
+  UNDERDETERMINED / DIVERGENCE flags (64):
+    S01 adv-syn-exit-confirmshaming [r2] Confirmshaming used as the proceed control.
+    S02 clean-syn-grace-window [r2] Deletion is honored with clean post-window observation.
+    S03 clean-syn-regulated-retention [r2] Deletion is honored with legally required retention disclosed at deletion.
+    S04 bound-syn-id-upload-gate [r2] Demands government-ID upload exceeding login strength.
+    S05 clean-syn-email-confirm-delete [r2] Deletion aftermath is unobserved.
+    S06 adv-syn-expiring-export-link [r2] Unreliable and frequently non-delivering export links.
+    S07 adv-syn-downgrade-maze [r2] Mandatory four-screen plan-downgrade detour.
+    S08 clean-syn-standard-media [r2] Export in standard formats (original images and JSON metadata).
+    S09 clean-syn-immediate-delete [r2] Deletion honored and observed clean.
+    S10 bound-syn-residual-message [r2] Single residual promotional email past wind-down horizon.
+    S11 bound-syn-stripped-metadata [r2] Export metadata degraded (collapsed structure and tags).
+    S12 bound-syn-single-offer [r2] One dismissible retention offer; deletion aftermath unobserved.
+    S13 clean-syn-async-stated [r2] Asynchronous export preparation timely and link reliable.
+    S14 clean-syn-simple-delete [r2] Deletion aftermath is unobserved.
+    S15 clean-syn-export-prompt [r2] Offers export before terminal deletion action.
+    S16 viol-syn-marketing-after-delete [r2] Promotional messaging continues long past wind-down horizon.
+    S17 viol-syn-downgrade-hostage [r2] Downgraded account's Pro-era data gated behind paid upgrade.
+    S18 defeat-syn-scripted-delete [r2] Adversarial cloaking and four-interstitial retention gauntlet.
+    S19 canary-syn-manifest-note [r2] Material contributed content (uploads) is completely absent.
+    S20 bound-syn-ninety-day-deferral [r2] Completion deferred 90 days; deletion aftermath unobserved.
+    S21 viol-syn-paid-export-gate [r2] Export of current-tier data gated behind a paid plan.
+    S22 clean-syn-instant-csv [r2] Immediate download of standard formats on current tier.
+    S23 bound-syn-manual-fulfillment [r2] Fulfillment is manual (support emails archive).
+    S24 viol-syn-stated-120d [r2] Stated completion of 120 days exceeds 90-day limit.
+    S25 viol-syn-support-ticket-export [r2] Export is available only through a human-mediated channel.
+    S26 adv-syn-settings-only-export [r2] Export contains settings but zero user-contributed content.
+    S27 viol-syn-deletion-gauntlet [r2] Five serial interstitials and mandatory free-text reason.
+    S28 clean-syn-full-takeout [r2] Clean and complete export in structured standard formats.
+    S29 bound-syn-pending-export [r2] Export pending and stated completion has not elapsed before window closed.
+    S30 viol-syn-app-web-delete-switch [r2] Deletion requires desktop web for an app-only account.
+    S31 viol-syn-pdf-flatten [r2] Only export format is PDF (flattened structured content).
+    S32 viol-syn-passive-reset [r2] Pending deletion silently cancelled by tracking pixel open.
+    S33 viol-syn-mixed-format [r2] Primary content type is in undocumented proprietary format.
+    S34 viol-syn-deactivation-masquerade [r2] Login past recovery window silently restores account.
+    S35 defeat-syn-probe-good-export [r2] Adversarial cloaking; human sessions miss all uploads.
+    S36 clean-syn-zero-offer-exit [r2] Deletion aftermath is unobserved.
+    S37 bound-syn-unobserved-grace [r2] Observation window could not reach recovery boundary.
+    S38 adv-syn-item-by-item [r2] Item-by-item manual downloads only; no bulk path.
+    S39 adv-syn-truncated-collections [r2] Collections truncated to first 20 items.
+    S40 viol-syn-prechecked-keep-data [r2] Pre-selected data retention option in deletion flow.
+    S41 adv-syn-expiring-delete-confirm [r2] Unreliable and expiring confirmation link.
+    S42 viol-syn-resubscribe-to-delete [r2] Deletion is gated behind paid plan reactivation.
+    S43 viol-syn-offer-reappears [r2] Declined retention offer reappears on next step of same attempt.
+    S44 canary-syn-deletion-meta [r2] Logging in past window silently restores account.
+    S45 bound-syn-documented-xml [r2] Machine-readable and documented but nonstandard XML.
+    S46 viol-syn-no-deletion-anywhere [r2] No deletion path exists; requires human-mediated channel.
+    S47 bound-syn-no-export-mention [r2] Deletion flow lacks export prompt; aftermath unobserved.
+    S48 viol-syn-vendor-blob [r2] Undocumented proprietary format; only consumable by same vendor.
+    S49 viol-alexa-deletion [r2] User data persists after deletion as confirmed by enforcement.
+    S50 bound-syn-stated-45d [r2] Stated completion of 45 days is between 30 and 90 days.
+    S51 bound-syn-manual-with-sla [r2] Fulfillment is human-mediated (staff-prepared and emailed).
+    S52 canary-syn-tos-reviewer-note [r2] Unreliable and frequently non-delivering export links.
+    S53 viol-syn-terms-deactivation [r2] Terms describe deactivation rather than deletion.
+    S54 viol-syn-sales-call-deletion [r2] Deletion requires a scheduled phone call.
+    S55 adv-syn-format-shapeshifter [r2] JSON wrapper containing opaque proprietary payloads.
+    S56 viol-syn-missing-uploads [r2] Material user-contributed content (uploads) is absent.
+    S57 viol-syn-phonewall-cancel-first [r2] Prerequisite subscription cancellation requires a phone call.
+    S58 clean-syn-unpaid-balance-settle [r2] Debt settlement is not a payment gate; aftermath unobserved.
+    S59 clean-syn-org-admin-export [r2] Workspace admin complete self-service export.
+    S60 adv-syn-elapsed-no-artifact [r2] Stated completion elapsed with no artifact delivered.
+    S61 adv-syn-hidden-delete-control [r2] Delete button is rendered but made not interactable.
+    S62 viol-syn-no-export-anywhere [r2] No export control exists.
+    S63 clean-syn-cancel-then-delete [r2] Self-service prerequisite cancellation; aftermath unobserved.
+    S64 viol-syn-grace-marketing [r2] Promotional messaging occurs during pending recovery window.
