@@ -1,0 +1,6 @@
+# Local, generated, never committed.
+.env
+data/
+__pycache__/
+*.pyc
+*.log

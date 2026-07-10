@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  noshit-f0-killbill minimal catalog.
+
+  One BASE product (Standard) on a single monthly plan whose TRIAL phase is
+  8 DAYS at $0, converting to a $29.95/month EVERGREEN phase. This is the
+  smallest catalog that exercises FIXTURES §2.1 rung 1: trial invoice ($0) ->
+  clock crosses T0+8d -> conversion invoice + charge -> cancel at period end.
+
+  Uploaded by the demo via POST /1.0/kb/catalog/xml (Content-Type: text/xml).
+-->
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd">
+
+    <effectiveDate>2020-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>NoShitF0</catalogName>
+
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+
+    <products>
+        <product name="Standard">
+            <category>BASE</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <!-- Default cancel honors the period boundary; the demo also passes
+                 END_OF_TERM explicitly so the intent is on the wire, not just
+                 in the catalog. -->
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+            <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+
+    <plans>
+        <plan name="standard-monthly">
+            <product>Standard</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>8</number>
+                    </duration>
+                    <fixed>
+                        <!-- empty fixedPrice = $0: the free trial -->
+                        <fixedPrice/>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+    </plans>
+
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>standard-monthly</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+
+</catalog>

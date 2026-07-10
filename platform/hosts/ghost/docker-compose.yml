@@ -1,0 +1,69 @@
+# No Shit — F0 platform proof, Ghost + Stripe test-clock leg.
+# Project: noshit-f0-ghost   (always scope commands: -p noshit-f0-ghost)
+#
+# Ghost runs in DEVELOPMENT mode on sqlite — NO MySQL for F0 (disk is tight;
+# production-parity MySQL is an F1 item, see README). Its outbound mail is
+# pointed at this leg's own Mailpit sink (FIXTURES §2.2, per-fixture sink).
+#
+# Host ports (platform port registry): app 2368, Mailpit UI 8027 / SMTP 1027.
+# Databases are never host-published.
+name: noshit-f0-ghost
+
+services:
+  mailpit:
+    # pinned; image already local (~30 MB)
+    image: axllent/mailpit:v1.21.8
+    container_name: noshit-f0-ghost-mailpit
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "5000"
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "127.0.0.1:8027:8025"   # Mailpit web UI + REST API
+      - "127.0.0.1:1027:1025"   # SMTP sink
+    networks:
+      - f0ghost
+    healthcheck:
+      # mailpit ships its own healthcheck subcommand
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  ghost:
+    # pinned by digest of ghost:5-alpine verified 2026-07-10 (634 MB)
+    image: ghost:5-alpine@sha256:a0506f3f05f5bdc6c950c5113cdcdb1e1f96fbf15f6dc0a39fc093c25348bdb5
+    container_name: noshit-f0-ghost-app
+    restart: unless-stopped
+    depends_on:
+      mailpit:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development                 # -> sqlite, dev config
+      url: http://localhost:2368
+      server__host: 0.0.0.0
+      server__port: "2368"
+      database__client: sqlite3
+      database__connection__filename: /var/lib/ghost/content/data/ghost-f0.db
+      # outbound mail -> this leg's Mailpit sink
+      mail__transport: SMTP
+      mail__options__host: mailpit
+      mail__options__port: "1025"
+      mail__options__secure: "false"
+      mail__from: "No Shit F0 Ghost <noreply@f0-ghost.test>"
+      # keep the fixture quiet + offline
+      privacy__useUpdateCheck: "false"
+    ports:
+      - "127.0.0.1:2368:2368"
+    volumes:
+      - ghost-content:/var/lib/ghost/content
+    networks:
+      - f0ghost
+
+networks:
+  f0ghost:
+    driver: bridge
+
+volumes:
+  ghost-content:

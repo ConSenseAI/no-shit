@@ -1,0 +1,5 @@
+# Generated locally by setup.sh — never commit secrets, certs, or runtime state.
+.env
+data/
+__pycache__/
+*.pyc

@@ -1,0 +1,13 @@
+# Secrets — never commit
+.env
+
+# Runtime state written by the proof/demo
+.run/
+*.log
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Ghost content volume (if ever bind-mounted)
+content/

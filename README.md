@@ -2,7 +2,7 @@
 
 Machine-verifiable, criterion-specific claims about the anti-extraction properties of software — dark patterns, subscription traps, surveillance, lock-in. A creator submits code (or a live product gets mystery-shopped by probe agents), a multi-model LLM consensus audit runs inside a trusted execution environment against a public, versioned criterion, and a signed attestation is published where humans, procurement teams, and buyers' agents can verify it.
 
-**Status: visioning / pre-development.** Nothing here runs yet. What exists is the design document and the first drafts of the criterion layer, published early on purpose: the spec being citable matters more than the pipeline being ready. (The name is a working title; the citable spec layer will carry a neutral technical name — see the design doc's *Naming* section.)
+**Status: early development.** The design document, criterion layer, and validation protocol are published living drafts — published early on purpose: the spec being citable matters more than the pipeline being ready. The first running code landed 2026-07-10: the F0 fixture-platform proof (`platform/`) — virtual-clock, mail-sink, seeding, and persona machinery demonstrated end-to-end on real hosts. The audit pipeline itself does not exist yet. (The name is a working title; the citable spec layer will carry a neutral technical name — see the design doc's *Naming* section.)
 
 ## What's here
 
@@ -17,7 +17,8 @@ Machine-verifiable, criterion-specific claims about the anti-extraction properti
 | [`criteria/no-lock-in/`](criteria/no-lock-in/) | The third criterion, completing the Stage 0 set: you can leave with your stuff — self-service export in standard formats, complete; self-service deletion that is honored; no obstruction on the way out | v0.1.7, draft |
 | [`validation/PROTOCOL.md`](validation/PROTOCOL.md) | The Stage 0 validation-study protocol: corpus and fixture construction, model pools, procedure under test, metrics, and the pre-stated kill criteria — freezes into the study's pre-registration before any execution | v0.1.5, draft |
 | [`validation/ATTAINABILITY.md`](validation/ATTAINABILITY.md) | The corpus-attainability audit (PROTOCOL §4.3): what the sealed corpus must contain vs. what the real world supplies with defensible ground truth — all 152 public rows classified by observation channels and fixture cost, findings feeding the fixture build plan and threshold finalization | v0.1.0, draft |
-| [`validation/FIXTURES.md`](validation/FIXTURES.md) | The fixture build plan (PROTOCOL §12.4): a four-service fixture platform — virtual clock, messaging capture, state seeding, support personas — host-bench assignments, six build lanes from enforcement-exhibit re-implementations to the defeat-device lane, pre-registered QA gates, and sequencing to freeze | v0.1.0, draft |
+| [`validation/FIXTURES.md`](validation/FIXTURES.md) | The fixture build plan (PROTOCOL §12.4): a four-service fixture platform — virtual clock, messaging capture, state seeding, support personas — host-bench assignments, six build lanes from enforcement-exhibit re-implementations to the defeat-device lane, pre-registered QA gates, and sequencing to freeze | v0.1.1, draft |
+| [`platform/`](platform/) | The fixture platform itself — the repo's first running code: compose legs proving the build plan's riskiest claims on real hosts (Kill Bill engine clock, Stripe sandbox test clocks, libfaketime, per-fixture mail sinks with first-class absence assertions, scripted personas) | F0 proven 2026-07-10 |
 
 ## The idea, briefly
 
