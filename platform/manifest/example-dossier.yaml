@@ -1,0 +1,59 @@
+# FICTIONAL example — no real company, case, or authority record. Exists so the
+# format has one complete instance in public and validate.py has a live target.
+
+dossier: example-regulator-exampleco-cancelmaze
+criterion: no-subscription-trap
+status: draft-dossier
+
+anchor:
+  case: "Example Regulator v. ExampleCo (2025) — fictional"
+  authority: other
+  action_type: fined
+  dates:
+    conduct: "2023..2024"
+    filed: "2024-06-01"
+    order: "2025-02-15"
+  strength_note: "Fictional adjudicated fine; in a real dossier: why this record ranks where it does."
+
+exhibit:
+  sources:
+    - url: "https://example.invalid/regulator/exampleco-decision.pdf"
+      what: "Decision §§4.2-4.6 (cancellation-flow findings) + Annex B screenshots"
+      confidence: confirmed
+      retrieved: "2026-07-10"
+  flow_documented:
+    - step: "Subscriber selects 'Cancel subscription' in account settings"
+      cite: "Decision §4.2"
+    - step: "Interstitial offers 40% discount; decline control is a low-contrast text link"
+      cite: "Decision §4.3, Annex B fig. 2"
+    - step: "Second interstitial requires a reason; 'continue' disabled until selection"
+      cite: "Decision §4.4"
+    - step: "Final screen schedules a 'retention specialist' callback instead of completing cancellation"
+      cite: "Decision §4.5, Annex B fig. 5"
+  artifacts: ["Annex B figs. 1-5 (flow screenshots)"]
+  gaps: >
+    The decision does not establish signup-flow step count (needed for the
+    symmetry comparison baseline) or whether billing continued during the
+    callback window; the fixture fills both with neutral defaults, disclosed
+    in the built manifest.
+
+fixture_spec:
+  host: "Ghost + Stripe (nst flagship — native tiers/trial/cancel surfaces)"
+  implant_outline: "Replace Ghost's cancel action with a three-interstitial chain; final step books a callback and leaves the subscription active."
+  channels: [ui, acct, pay]
+  tier: E2
+  time_script_needs: "One renewal boundary to show billing continues past the 'cancellation' attempt."
+  seeding_needs: "One paid member on a monthly tier."
+
+expected_labels:
+  - criterion: no-subscription-trap
+    version: "0.1.11"
+    expected_verdict: FAIL
+    failing_checks: [1, 2]
+    basis: enforcement-exhibit
+    basis_date: "2025-02-15"
+    scope: "Fidelity to the fictional decision's documented flow as of 2025-02-15; not a claim about any live product."
+
+build_estimate: M
+open_questions:
+  - "Signup-flow baseline: mirror Ghost's stock signup or re-implement the decision's (unspecified) signup?"

@@ -1,0 +1,51 @@
+# Lane-1 exhibit dossier — copy, fill, validate with platform/manifest/validate.py.
+# Instances are SEALED-SIDE: they live outside the public repo until the study
+# report reveals the corpus. See platform/manifest/README.md.
+
+dossier: authority-product-slug        # kebab-case, stable id, e.g. ftc-exampleco-cancelmaze
+criterion: no-subscription-trap        # primary criterion (a fixture may carry labels for others too)
+status: draft-dossier                  # draft-dossier -> build-ready -> built (builder advances it)
+
+anchor:
+  case: "Authority v. Product (year)"  # human-readable case name
+  authority: ""                        # FTC | CFPB | CPPA | CA-AG | CNIL | AGCM | CMA | EC-DSA | DPC | AEPD | court | other
+  action_type: fined                   # fined | adjudicated | settlement | commitment | complaint-filed  (descending label strength)
+  dates:
+    conduct: "YYYY or YYYY..YYYY"      # when the violating conduct is documented to have run (ranges use "..")
+    filed: "YYYY-MM-DD"                # complaint/proceeding date (if any)
+    order: "YYYY-MM-DD"                # order/decision/settlement date (if any; omit if none)
+  strength_note: ""                    # one line: why this ranks where it does (PROTOCOL §9 basis 1)
+
+exhibit:
+  sources:                             # every load-bearing claim needs one of these
+    - url: ""
+      what: ""                         # e.g. "FTC complaint PDF, ¶¶ 30-42 + Fig. 3 (Iliad flow screens)"
+      confidence: confirmed            # confirmed = read from the primary record | reported = secondary
+      retrieved: "YYYY-MM-DD"
+  flow_documented:                     # the violating flow, step by step, AS THE EXHIBIT ESTABLISHES IT
+    - step: ""                         # what the user encounters/does
+      cite: ""                         # exhibit anchor: complaint ¶, decision §, figure, archive capture
+  artifacts: []                        # figures/screenshots/captures worth mirroring at build time
+  gaps: ""                             # MANDATORY honesty field: what the exhibit does NOT establish
+                                       # (the fixture must not invent these details — builder decides
+                                       # neutral filler, disclosed in the built manifest)
+
+fixture_spec:
+  host: ""                             # bench host (FIXTURES §3) + one-line rationale
+  implant_outline: ""                  # what gets implanted/modified, at diff-outline grain
+  channels: []                         # ATTAINABILITY §3 vocabulary: ui ui* acct acct* pay t:<X> msg sup multi org net art terms code
+  tier: E2                             # E1 | E2 | E3 | E4  (ATTAINABILITY §3 fixture tiers)
+  time_script_needs: ""                # longitudinal facts -> clock positions (empty string if none)
+  seeding_needs: ""                    # accounts/content/billing-history the flow requires
+
+expected_labels:                       # >=1; the primary criterion MUST appear
+  - criterion: no-subscription-trap
+    version: ""                        # SPEC version the checks are numbered against, e.g. "0.1.11"
+    expected_verdict: FAIL             # PASS | CONDITIONAL | FAIL | INDETERMINATE
+    failing_checks: []                 # SPEC check numbers (ints); required non-empty iff verdict is FAIL
+    basis: enforcement-exhibit         # Lane-1 dossiers are always enforcement-exhibit basis
+    basis_date: "YYYY-MM-DD"           # the record's date (order > filed > conduct, most authoritative available)
+    scope: ""                          # fidelity-to-exhibit statement: what the label claims, and as-of when
+
+build_estimate: M                      # S | M | L (relative engineering size on the assigned host)
+open_questions: []                     # what a builder must resolve before build-ready
