@@ -431,6 +431,7 @@ def _lifecycle_proof(s, args, caps):
         clock = s.post("/test_helpers/test_clocks",
                        {"frozen_time": t0, "name": f"{TOOL_TAG}-{run_id}"})
         tl.mark(t0, "clock frozen; subscription created", f"clock={clock['id']}")
+        log.append({"kind": "clock_created", "clock": clock["id"], "t0": t0})
 
         say("STEP 3  customer on the clock + 4242 card")
         cust = s.post("/customers", {"name": f"F0 Member {run_id}",
@@ -452,6 +453,8 @@ def _lifecycle_proof(s, args, caps):
         ck.check(abs(sub["trial_end"] - (t0 + 8 * DAY)) <= 2,
                  f"trial_end == T0+8d ({_utc(sub['trial_end'])})")
         tl.mark(sub["trial_end"], "trial scheduled to end", "8-day trial")
+        log.append({"kind": "subscribed", "sub": sub_id, "status": sub["status"],
+                    "trial_end": sub["trial_end"]})
 
         say("STEP 5  advance -> T0+6d (cross trial_will_end trigger at T0+5d)")
         advance_clock(s, clock["id"], t0 + 6 * DAY)
@@ -471,6 +474,7 @@ def _lifecycle_proof(s, args, caps):
                      "trial_end still ahead of clock (notice-window proxy)")
             detail = "events denied — proxy assertion"
         tl.mark(t0 + 6 * DAY, "clock at T0+6d; trial_will_end window crossed", detail)
+        log.append({"kind": "advanced", "to": t0 + 6 * DAY, "observed": detail})
 
         say("STEP 6  advance -> T0+8d+1h (trial ends; invoice finalizes + pays)")
         advance_clock(s, clock["id"], t0 + 8 * DAY + HOUR)
@@ -484,6 +488,8 @@ def _lifecycle_proof(s, args, caps):
         n_paid = len(paid)
         tl.mark(t0 + 8 * DAY + HOUR, "trial converted -> active; invoice charged",
                 f"invoice {paid[0]['id']} paid ${paid[0]['amount_paid']/100:.2f}")
+        log.append({"kind": "converted", "invoice": paid[0]["id"],
+                    "amount_paid": paid[0]["amount_paid"], "status": sub8["status"]})
 
         say("STEP 7  cancel_at_period_end; advance to the boundary")
         s.post(f"/subscriptions/{sub_id}", {"cancel_at_period_end": True})
@@ -497,6 +503,8 @@ def _lifecycle_proof(s, args, caps):
         ck.check(len(paid2) == n_paid, f"no extra charge after cancel ({len(paid2)})")
         tl.mark(boundary + HOUR, "period boundary passed; subscription canceled",
                 "cancellation honored — no further charge")
+        log.append({"kind": "canceled", "boundary": boundary,
+                    "status": subC["status"], "paid_invoices": len(paid2)})
 
         print(tl.render())
         say("")
@@ -597,7 +605,7 @@ def _clock_proof(s, args, caps):
 
 
 def _finalize(s, args, clock, archivables, log, run_id, t0, ck):
-    if args.json_log and log:
+    if args.json_log and (log or ck.items):
         with open(args.json_log, "w") as fh:
             json.dump({"run_id": run_id, "t0": t0, "events": log,
                        "checks": ck.items}, fh, indent=2, default=str)

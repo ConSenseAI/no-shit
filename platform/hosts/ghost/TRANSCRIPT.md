@@ -151,3 +151,38 @@ lifecycle instead of the clock-mechanics proof — no code change. The `[BLOCKED
 lines above become live assertions: `trialing` at T0+6d, a `trial_will_end`
 event, `active` + a `$12.00` **paid** invoice at T0+8d1h, and `canceled` at the
 period boundary with no further charge.
+
+
+---
+
+## Run 2 — 2026-07-10 (re-scoped key): FULL LIFECYCLE, 9/9
+
+Operator re-scoped the same restricted key (customers, subscriptions, invoices,
+events, products, prices now granted). `stripe-clockctl.py full-cycle`
+auto-selected FULL LIFECYCLE mode, verbatim result (key masked):
+
+```
+MODE: FULL LIFECYCLE (key has subscription scope)  run_id=1783644568
+  [PASS] subscription starts 'trialing' (got trialing)
+  [PASS] trial_end == T0+8d (2026-07-18 00:49 UTC)
+  [PASS] still trialing at T0+6d (trialing)
+  [PASS] trial_will_end event observed
+  [PASS] converted to active (active)
+  [PASS] a finalized+paid invoice exists (1)
+  [PASS] conversion charge == $12.00 ($12.00)
+  [PASS] canceled at boundary (canceled)
+  [PASS] no extra charge after cancel (1)
+
+  position   sim UTC            observation
+  T0         2026-07-10 00:49   clock frozen; subscription created
+  T0+6d      2026-07-16 00:49   trial_will_end window crossed -> event evt_1TrSdKAe1QHeexVrNMtQFY87
+  T0+8d1h    2026-07-18 01:49   trial converted -> active; invoice in_1TrSdOAe1QHeexVrXWx4Fdng paid $12.00
+  T0+39d1h   2026-08-18 01:49   period boundary passed; cancellation honored — no further charge
+
+RESULT: 9/9 assertions passed (wall 31.1s)
+FULL LIFECYCLE proven on the Stripe sandbox — floor + billing target met.
+CLEANUP: deleted test clock (cascades customers + subscriptions)
+```
+
+Tool change with this run: `_lifecycle_proof` now populates the `--json-log`
+evidence file (it previously only did so in clock-mechanics mode).

@@ -6,6 +6,18 @@ proves the **virtual-clock** service (FIXTURES §2.1 rung 1) on the Stripe side
 and the **messaging-capture** service (§2.2) on the Ghost side, in minutes of
 wall time, self-cleaning and re-runnable from a cold start.
 
+> **Update (2026-07-10, later the same day):** the key was re-scoped by the
+> operator (customers/subscriptions/invoices/events/products/prices granted) and
+> `full-cycle` auto-upgraded exactly as designed — **FULL LIFECYCLE proven, 9/9**:
+> `trialing` at T0 → `trial_will_end` event observed at T0+6d → converted
+> `active` with a finalized **paid $12.00 invoice** at T0+8d+1h →
+> `cancel_at_period_end` honored at the boundary, no further charge. 39 virtual
+> days in 31 s wall; test clock cascade-deleted. Verbatim run appended to
+> [`TRANSCRIPT.md`](TRANSCRIPT.md). The scope-wall analysis below is preserved
+> as the record of the *first* run and of what a test-clock-only key can and
+> cannot prove. Ghost **billing coupling** (Stripe tiers inside Ghost) remains
+> an F1 item — it needs a webhook path into Ghost, not just key scope.
+
 Compose project: **`noshit-f0-ghost`**. Host ports: Ghost **2368**, Mailpit UI
 **8027** / SMTP **1027**. Databases are never host-published.
 
