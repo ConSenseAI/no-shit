@@ -1,6 +1,6 @@
 # Fixture Build Plan
 
-**Version:** 0.1.1 · **Status:** draft — §2's platform claims F0-proven 2026-07-10 ([`platform/`](../platform/))
+**Version:** 0.1.2 · **Status:** draft — §2's platform claims F0-proven 2026-07-10 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
 **Serves:** [`PROTOCOL.md`](PROTOCOL.md) §12.4 (fixture build plan and budget — this document is the plan; dollar figures and final numeric QA thresholds are fixed at freeze per §2) and §12.9 (observation-procedure parameters — §7 below drafts the proposals the freeze pins)
 **Consumes:** [`ATTAINABILITY.md`](ATTAINABILITY.md) — the demand tables (§2–§3), findings O-1…O-10, the host bench (§5.3), the gap analysis (§6), and the §7 recommendations this plan converts into build items
 **Platform tooling facts as of:** 2026-07-09 — documentation-level verification, tagged inline; F0 (§9) converts them to working fact
@@ -96,6 +96,8 @@ Fixture inventory above the floors is what makes the §8 iteration folds possibl
 
 ## 7. §12.9 proposals (the freeze pins the numbers)
 
+*Expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md) (0.1.2) — the four stubs below remain as summaries; the row-level tables there are what the freeze pins.*
+
 - **7.1 Window registry.** Every longitudinal fact class carries a pre-registered observation window, tabulated as a protocol appendix at freeze: trial-notice (8d-class), pause-resume (35d-class), deactivation-masquerade (60d), annual reminder (1y), grace windows (20–60d), residual messaging (9d+), export-link expiry (hours–days), deletion-confirmation windows. Fixture observation = clock-scripted exact positions; live observation = pre-registered wall-time windows priced into the cell's cost model. Every absence claim cites its window.
 - **7.2 Surface-census definition.** Proposed censused set per fixture: all settings/account/billing surfaces; help/docs searched over a criterion keyword list; terms/privacy pages; footers; primary-nav sweep to a fixed depth; plus each SPEC §9's criterion-specific surfaces. Absence claims are scoped to the census; the census is recorded in the manifest (O-2). Keyword lists and sweep depth are pinned at freeze.
 - **7.3 Rate-fact trials (O-4).** Structure: a per-fact table of trial count n and decision rule. In fixtures the rate is constructed, so n is chosen to detect the built rate with ≥99% probability; in live cells a pre-registered default n applies with the exact binomial bound reported alongside the claim. Proposed live default: n = 8; per-fact rules at freeze.
@@ -143,6 +145,8 @@ By the demand tier mix (E1 21 · E2 80 · E3 44 · E4 7, which the sealed set mi
 - Live-lane calendar time is irreducible: annual-cycle facts are out of live reach within any reasonable study window (fixture-only, per O-1), and backend-truth facts remain fixture/enforcement-only (O-3) — both stated external-validity limits of the behavioral tier, carried into the report.
 
 ## 12. Changelog
+
+- **0.1.2** (2026-07-10) — §7's four proposal stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md) 0.1.0; pointer added. No plan changes.
 
 - **0.1.1** (2026-07-10) — F0 executed and proven ([`platform/`](../platform/), the repo's first running code); findings folded back: §2.1 rung 1 gains the Stripe key-scope provisioning constraint and the Kill Bill bare-date/noon rule (both found empirically); rung 2 marked glibc-only with the musl-sidecar pattern; §2.2 gains the no-prune-during-absence-windows rule; §9's F0 item recorded done with per-leg results. No plan-structure changes.
 
