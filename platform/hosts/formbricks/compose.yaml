@@ -1,0 +1,145 @@
+# noshit-f1-formbricks — F1 platform proof, Formbricks leg.
+#
+# Proves the platform's HOST BRING-UP + BULK-SEEDING + MESSAGING-CAPTURE services
+# on a NEW host (FIXTURES §2.2 msg-channel census, §2.3 bulk content) for the
+# CHURN-SURVEY SURFACE: the exit-survey / cancel-flow questionnaire shape that
+# ndp/nst fixtures will later exercise. This file is PUBLIC platform code
+# (Apache-2.0): no study fixtures, no labels, no implants.
+#
+# EE BOUNDARY: Formbricks' enterprise code lives under apps/web/modules/ee/
+# (separate Formbricks Enterprise License; billing under ee/billing/). This leg
+# uses COMMUNITY features only — no ENTERPRISE_LICENSE_KEY, no billing config, no
+# EE-gated toggles. The core is AGPLv3; we build entirely outside ee/.
+#
+# Host-published ports are loopback-only and limited to this leg's registry
+# allocation: app 3003, mailpit UI 8033 / SMTP 1033. Postgres is on the internal
+# network ONLY and is NEVER host-published (the machine runs a live Postgres on
+# 5432).
+name: noshit-f1-formbricks
+
+services:
+  # --- Postgres 15 + pgvector: internal only, NEVER host-published ------------
+  # Formbricks v3.16.1's baked migrations run `CREATE EXTENSION "vector"` and
+  # declare vector(512) columns (AI Insight/Document tables) — pgvector is a HARD
+  # migration-time requirement, so the app will not boot on a stock postgres. The
+  # resident postgres:15-alpine has no pgvector, so we build it in as a ~1 MB
+  # local layer ON TOP of that exact image (postgres-pgvector.Dockerfile; setup.sh
+  # builds it). Every base layer is SHARED with the resident image — negligible
+  # net new disk. See README deviation #1.
+  #
+  # Runs as the host uid (1000:1000) so the bind-mounted data dir stays host-owned
+  # and the documented `rm -rf` reset works without sudo. PGDATA is a subdir of
+  # the mount. The image's socket dir /var/run/postgresql (owned by the image's
+  # postgres uid) is not writable by uid 1000, so it is backed by a writable
+  # tmpfs; Formbricks connects over TCP (host: db) and the healthcheck uses TCP.
+  # The `postgres` role is SUPERUSER (needed for CREATE EXTENSION at migrate).
+  db:
+    image: noshit-f1-formbricks-postgres:15-pgvector   # built locally by setup.sh
+    user: "1000:1000"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run ./setup.sh to generate .env}
+      POSTGRES_DB: formbricks
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d formbricks"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    tmpfs:
+      - /var/run/postgresql:mode=1777
+    volumes:
+      # Durable disk (NOT a named volume — the docker store here is volatile).
+      # Holds the seeded survey + >=100 responses + the founder user.
+      - /home/user/fixture-runtime/formbricks/db:/var/lib/postgresql/data
+    networks: [internal]
+
+  # --- Mailpit: the per-fixture SMTP sink (msg-channel census) ----------------
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    environment:
+      # Accept whatever auth Formbricks' SMTP client offers (incl. none) over the
+      # plaintext internal link, so verification / notification mail is captured.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      # Never auto-prune: event-anchored absence windows must be sound over the
+      # whole run (platform no-prune-during-absence-windows rule).
+      MP_MAX_MESSAGES: "0"
+    ports:
+      - "127.0.0.1:8033:8025"   # UI + REST API (harness/mailsink.py talks here)
+      - "127.0.0.1:1033:1025"   # SMTP submission (Formbricks sends here)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # --- Formbricks: the app under test (Next.js; HTTP + REST API) --------------
+  # The image's start.sh runs supercronic (in-container cron), then
+  # `apply-migrations.js` (Prisma-style schema migrations — self-migrates on first
+  # boot; we do NOT set SKIP_STARTUP_MIGRATION), then create-saml-database.js
+  # (a NO-OP when SAML_DATABASE_URL is unset — verified), then `node server.js`.
+  #
+  # Redis is intentionally OMITTED: Formbricks 3.x treats REDIS_URL as optional
+  # with an in-memory cache/rate-limit fallback (mandatory only from v5). This
+  # keeps the leg to the operator's {app + postgres + mailpit} shape.
+  #
+  # WEBAPP_URL / NEXTAUTH_URL are the HOST-reachable origin so links inside
+  # emitted mail (email-verification token) resolve to a URL the host can follow.
+  # EMAIL_VERIFICATION_DISABLED=0 turns verification mail ON (the signup
+  # round-trip we want; the shipped compose ships =1). SMTP points at the
+  # in-network Mailpit sink, unauthenticated + plaintext.
+  # Image pinned by digest of ghcr.io/formbricks/formbricks:v3.16.1 (2026-07-11).
+  formbricks:
+    image: ghcr.io/formbricks/formbricks:v3.16.1@sha256:1cd324d2dc82eb906bf3a03ffc7d679b81d2d0ebdb35173669a68afe84350239
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?run ./setup.sh}@db:5432/formbricks?schema=public
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?run ./setup.sh to generate .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?run ./setup.sh to generate .env}
+      CRON_SECRET: ${CRON_SECRET:?run ./setup.sh to generate .env}
+      WEBAPP_URL: http://localhost:3003
+      NEXTAUTH_URL: http://localhost:3003
+      # --- email verification ON + SMTP -> the sink (unauth, plaintext) --------
+      EMAIL_VERIFICATION_DISABLED: "0"
+      PASSWORD_RESET_DISABLED: "0"
+      MAIL_FROM: fixture@formbricks.test
+      MAIL_FROM_NAME: "No Shit F1 Bench"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_SECURE_ENABLED: "0"      # no implicit TLS (STARTTLS/plaintext)
+      SMTP_AUTHENTICATED: "0"       # no credentials required
+      SMTP_REJECT_UNAUTHORIZED_TLS: "0"
+      # In-container cron (supercronic) stays enabled (default) for realism; the
+      # notification proof triggers the response pipeline deterministically.
+      DOCKER_CRON_ENABLED: "1"
+      # Formbricks' public client API is rate-limited by an in-memory limiter
+      # (no Redis here). Bulk churn-response seeding (>=100 in one pass) trips it,
+      # so it is disabled for this fixture — rate limiting is not part of the
+      # churn-survey surface being proven. See README deviation #5.
+      RATE_LIMITING_DISABLED: "1"
+    volumes:
+      # Uploaded files (not exercised by the churn-survey proofs, but the app CAN
+      # persist here). World-writable host dir (app runs as uid 1001) — setup.sh
+      # chmods it. Durable state that the proofs depend on is the Postgres DB.
+      - /home/user/fixture-runtime/formbricks/uploads:/home/nextjs/apps/web/uploads
+    ports:
+      - "127.0.0.1:3003:3000"
+    healthcheck:
+      # Node is always present; /health returns 200 once the app + DB are up.
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 120s
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge

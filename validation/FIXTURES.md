@@ -1,6 +1,6 @@
 # Fixture Build Plan
 
-**Version:** 0.1.4 · **Status:** draft — §2's platform claims F0-proven 2026-07-10; F1 staged bench build underway 2026-07-11 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
+**Version:** 0.1.5 · **Status:** draft — §2's platform claims F0-proven 2026-07-10; F1 staged bench build underway 2026-07-11 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
 **Serves:** [`PROTOCOL.md`](PROTOCOL.md) §12.4 (fixture build plan and budget — this document is the plan; dollar figures and final numeric QA thresholds are fixed at freeze per §2) and §12.9 (observation-procedure parameters — §7 below drafts the proposals the freeze pins)
 **Consumes:** [`ATTAINABILITY.md`](ATTAINABILITY.md) — the demand tables (§2–§3), findings O-1…O-10, the host bench (§5.3), the gap analysis (§6), and the §7 recommendations this plan converts into build items
 **Platform tooling facts as of:** 2026-07-09 — documentation-level verification, tagged inline; F0 (§9) converts them to working fact
@@ -59,7 +59,7 @@ The verified bench from ATTAINABILITY §5.3, turned into build assignments:
 | **Rocket.Chat** | nst nli | tier-asymmetric cancel parity; GDPR export + self-delete (heavy setup — later phase) |
 | **Medusa / Saleor** | ndp nst | assemble-your-own commerce surfaces where a shape fits no packaged host |
 | **Lago / Kill Bill** | nst (logic) | billing-*behavior* ground truth: auto-renew, trial conversion, proration, dunning as auditable code; Kill Bill is the clock reference implementation |
-| Listmonk / Plausible / Keila / Formbricks | ndp nli | consent, unsubscribe-parity, churn-survey surfaces (Formbricks billing dir is EE — build outside it) |
+| Listmonk / Plausible / Keila / Formbricks | ndp nli | consent, unsubscribe-parity, churn-survey surfaces (Formbricks billing dir is EE — build outside it). F1 note (2026-07-11): listmonk, plausible, and formbricks proven as bench legs — the class's three distinct surfaces covered; **keila deferred** (its newsletter shapes duplicate listmonk's). Formbricks pins **v3.16.1**: pgvector is a hard DB requirement, and 5.x is a five-service rearchitecture with no published CE image past 3.16.1 at review time |
 
 ## 4. Lanes
 
@@ -145,6 +145,8 @@ By the demand tier mix (E1 21 · E2 80 · E3 44 · E4 7, which the sealed set mi
 - Live-lane calendar time is irreducible: annual-cycle facts are out of live reach within any reasonable study window (fixture-only, per O-1), and backend-truth facts remain fixture/enforcement-only (O-3) — both stated external-validity limits of the behavioral tier, carried into the report.
 
 ## 12. Changelog
+
+- **0.1.5** (2026-07-11) — §3 light-class row (Listmonk/Plausible/Keila/Formbricks): three of four proven as F1 bench legs covering the class's three distinct surfaces; keila deferred as duplicative of listmonk; Formbricks build constraints recorded (v3.16.1 pin — pgvector hard requirement, 5.x rearchitecture without a published CE image at review time). No plan-structure changes.
 
 - **0.1.4** (2026-07-11) — §3 Discourse row: discourse-subscriptions is bundled into Discourse core (standalone repo archived 2025-07-14; still MIT; plugin dir remains the implant surface, pinned via the core SHA) — found during the F1 discourse leg and independently verified against the archived repo. No plan changes.
 

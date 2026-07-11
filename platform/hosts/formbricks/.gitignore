@@ -1,0 +1,9 @@
+# Generated locally by setup.sh — never commit secrets or runtime state.
+.env
+__pycache__/
+*.pyc
+*.log
+captures/
+# Formbricks' durable data (Postgres DB, uploads) lives OUTSIDE the repo at
+# /home/user/fixture-runtime/formbricks/ (durable disk); nothing runtime is
+# written under this directory.

@@ -1,0 +1,190 @@
+# noshit-f1-plausible — F1 platform proof, Plausible (Community Edition) leg.
+#
+# Proves the platform's HOST BRING-UP + BULK-SEEDING + MESSAGING-CAPTURE services
+# on a NEW host with a two-datastore backend (FIXTURES §2.2 msg-channel census,
+# §2.3 bulk content). Plausible is on the bench (with Listmonk/Keila/Formbricks)
+# for CONSENT/ANALYTICS surfaces: this leg proves the instance stands up cleanly
+# (incl. its ClickHouse dependency), takes bulk EVENTS through the SAME ingestion
+# endpoint (POST /api/event) that the real tracking script uses, does the mail
+# round-trip, and holds an event-anchored absence window — before any study
+# content exists. PUBLIC platform code (Apache-2.0): no study fixtures, no labels,
+# no implants.
+#
+# Shape follows Plausible's OWN official compose (plausible/community-edition
+# v3.2.1) with the platform's durability conventions layered on: durable state is
+# bind-mounted under /home/user/fixture-runtime/plausible/ (NOT docker named
+# volumes — the docker store here is volatile), the datastores run as the host uid
+# so the documented sudo-less reset works, and a per-fixture Mailpit sink has
+# unbounded retention.
+#
+# Host-published ports are loopback-only and limited to this leg's registry
+# allocation: app 8085 (Plausible's container port 8000), mailpit UI 8034 / SMTP
+# 1034. Postgres AND ClickHouse are on the internal network ONLY and are NEVER
+# host-published (the machine runs a live Postgres on 5432). Plausible is an
+# Elixir/BEAM app: EPMD / distribution ports (4369, dynamic) are deliberately
+# NOT published — all BEAM networking stays inside the compose network (4369 is
+# occupied by the host's own erlang anyway).
+name: noshit-f1-plausible
+
+services:
+  # --- Postgres 16: internal only, NEVER host-published -----------------------
+  # Plausible v3.x pins postgres:16 (its official compose); pg15 is not used. Runs
+  # as the host uid (1000:1000) so the bind-mounted data dir under fixture-runtime
+  # stays host-owned and the documented reset path (rm -rf .../plausible/db) works
+  # without sudo. PGDATA is a subdir of the mount (recommended for bind mounts).
+  # The default socket dir /var/run/postgresql is owned by the image's postgres
+  # uid and is not writable by uid 1000, so it is backed by a writable tmpfs;
+  # Plausible connects over TCP (host: db) and the healthcheck uses TCP. The
+  # `plausible` role is a SUPERUSER (POSTGRES_USER default) so Plausible's own
+  # `db createdb` / migrations can CREATE DATABASE / EXTENSION as needed.
+  db:
+    image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    user: "1000:1000"
+    environment:
+      POSTGRES_USER: plausible
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run ./setup.sh to generate .env}
+      POSTGRES_DB: plausible
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U plausible -d plausible"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    tmpfs:
+      - /var/run/postgresql:mode=1777
+    volumes:
+      # Durable disk (NOT a named volume — the docker store here is volatile).
+      - /home/user/fixture-runtime/plausible/db:/var/lib/postgresql/data
+    networks: [internal]
+
+  # --- ClickHouse: the EVENTS datastore, internal only, NEVER host-published --
+  # This is what makes Plausible a two-datastore bring-up: pageviews/custom events
+  # land here (buffered), Postgres holds accounts/sites/settings. Config follows
+  # Plausible's own hosting kit (four read-only XML drop-ins): low-log (logs.xml),
+  # IPv4-only bind (ipv4-only.xml), and the <16GB-RAM tuning split across
+  # low-resources.xml (config.d) + default-profile-low-resources-overrides.xml
+  # (users.d). CLICKHOUSE_SKIP_USER_SETUP=1 keeps the default (no-password) user,
+  # which Plausible connects as. nofile ulimit per upstream. Runs as host uid 1000
+  # so its bind-mounted data/logs stay host-owned (sudo-less reset). The alpine
+  # entrypoint execs clickhouse-server directly when started non-root.
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12-alpine@sha256:cd450891db46cc6ffe313ca2b0fb7dbfb897a6873ca74a724cbe050a2cf62621
+    user: "1000:1000"
+    environment:
+      CLICKHOUSE_SKIP_USER_SETUP: "1"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      # Durable disk (NOT named volumes).
+      - /home/user/fixture-runtime/plausible/clickhouse/data:/var/lib/clickhouse
+      - /home/user/fixture-runtime/plausible/clickhouse/logs:/var/log/clickhouse-server
+      # Read-only config drop-ins (Plausible's own hosting-kit conventions).
+      - ./clickhouse/logs.xml:/etc/clickhouse-server/config.d/logs.xml:ro
+      - ./clickhouse/ipv4-only.xml:/etc/clickhouse-server/config.d/ipv4-only.xml:ro
+      - ./clickhouse/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml:ro
+      - ./clickhouse/default-profile-low-resources-overrides.xml:/etc/clickhouse-server/users.d/default-profile-low-resources-overrides.xml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 -O - http://127.0.0.1:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+    networks: [internal]
+
+  # --- Mailpit: the per-fixture SMTP sink (msg-channel census) ----------------
+  mailpit:
+    image: axllent/mailpit:v1.30.4@sha256:5a49a77c5bdbe7c5474450b4f46348d09949df3695257729c93a30369382d4f6
+    environment:
+      # Accept whatever auth Plausible's SMTP client offers (incl. none) over the
+      # plaintext internal link, so verification / invite mail is captured.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      # Never auto-prune: event-anchored absence windows must be sound over the
+      # whole run (platform no-prune-during-absence-windows rule).
+      MP_MAX_MESSAGES: "0"
+    ports:
+      - "127.0.0.1:8034:8025"   # UI + REST API (harness/mailsink.py talks here)
+      - "127.0.0.1:1034:1025"   # SMTP submission (Plausible sends here)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # --- Plausible CE: the app under test (HTTP + /api/event ingest + Stats API)-
+  # Command is Plausible's own: createdb (idempotent), migrate (idempotent), run.
+  # Migrations run on EVERY boot but only apply pending ones, so warm reboots are
+  # fast and durable state survives. BASE_URL is the HOST-reachable origin so
+  # links inside emitted mail (activation / invite) resolve to a URL the host can
+  # follow. Registration is ENABLED (first-user signup is the round-trip) and
+  # email verification is ENABLED (the verification round-trip is the point).
+  # SMTP points at the in-network Mailpit sink; MAILER_ADAPTER is left UNSET so
+  # Plausible uses its built-in default SMTP mailer and reads SMTP_HOST_* below.
+  # Image pinned by digest of ghcr.io/plausible/community-edition:v3.2.1.
+  plausible:
+    image: ghcr.io/plausible/community-edition:v3.2.1@sha256:33e60bfb40f2df5da00f8753b76fad04f67dba3abe6d73eb516e440e3fb62985
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    command: sh -c "/entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    environment:
+      BASE_URL: http://localhost:8085
+      HTTP_PORT: "8000"
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?run ./setup.sh to generate .env}
+      TOTP_VAULT_KEY: ${TOTP_VAULT_KEY:?run ./setup.sh to generate .env}
+      # First-run registration ON; email verification ON (round-trip is the proof).
+      DISABLE_REGISTRATION: "false"
+      ENABLE_EMAIL_VERIFICATION: "true"
+      DATABASE_URL: postgres://plausible:${POSTGRES_PASSWORD:?run ./setup.sh}@db:5432/plausible
+      CLICKHOUSE_DATABASE_URL: http://clickhouse:8123/plausible_events
+      # Mail -> the sink. Plaintext SMTP on mailpit:1025, no auth, no TLS.
+      MAILER_EMAIL: fixture@plausible.test
+      MAILER_NAME: "No Shit F1 Bench"
+      SMTP_HOST_ADDR: mailpit
+      SMTP_HOST_PORT: "1025"
+      SMTP_USER_NAME: ""
+      SMTP_USER_PWD: ""
+      SMTP_HOST_SSL_ENABLED: "false"
+    # NO bind mount on /var/lib/plausible. The app keeps NO primary state there
+    # (accounts -> Postgres, events -> ClickHouse, both bind-mounted below); it is
+    # only tzdata's runtime cache + tmp. The image ships that dir EMPTY and 0777
+    # root-owned, and the runtime user is uid 999 — a host bind mount (uid 1000,
+    # 0775) would be un-writable by 999, so tzdata's data_dir bootstrap crashes
+    # with :enoent. A docker named volume would inherit the 0777 and work, but the
+    # platform forbids named volumes (volatile store). Leaving /var/lib/plausible
+    # on the container's own writable layer is correct here: nothing durable lives
+    # in it, and tzdata rebuilds from its bundled release each boot (no network).
+    ports:
+      - "127.0.0.1:8085:8000"
+    healthcheck:
+      # /api/health returns 200 with component statuses (postgres/clickhouse/
+      # sessions/sites_cache) once the app is serving; migrations run BEFORE
+      # `run`, so serving implies migrated. MUST use 127.0.0.1, NOT localhost:
+      # the app binds IPv4 0.0.0.0:8000 only, while `localhost` resolves to the
+      # IPv6 ::1 loopback inside the container (nothing listens there -> refused).
+      # busybox wget ships in the alpine image. This gates compose `--wait`.
+      # start_period is long: first boot runs migrations + a full cache warm that
+      # can take several minutes on a slow shared disk before the HTTP endpoint
+      # accepts connections (warm reboots are far faster).
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+      start_period: 240s
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge

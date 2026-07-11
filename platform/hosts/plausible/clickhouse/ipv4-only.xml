@@ -1,0 +1,6 @@
+<!-- Verbatim from plausible/community-edition v3.2.1 (clickhouse/ipv4-only.xml).
+     Forces ClickHouse to bind IPv4 only; avoids the "::" IPv6 bind that some
+     container networks (no IPv6) reject at startup. -->
+<clickhouse>
+    <listen_host>0.0.0.0</listen_host>
+</clickhouse>

@@ -1,0 +1,8 @@
+# Generated locally by setup.sh — never commit secrets or runtime state.
+.env
+__pycache__/
+*.pyc
+*.log
+# Postgres + ClickHouse data and app scratch live OUTSIDE the repo at
+# /home/user/fixture-runtime/plausible/ (durable disk); nothing runtime is
+# written under this directory.
