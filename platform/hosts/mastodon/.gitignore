@@ -1,0 +1,9 @@
+# Generated locally by setup.sh — never commit secrets or runtime state.
+.env
+.env.tmp
+__pycache__/
+*.pyc
+*.log
+# Postgres data, Redis data, media, account archives, and CSV captures live
+# OUTSIDE the repo under /home/user/fixture-runtime/mastodon/ (durable disk) —
+# nothing runtime is written under this directory.
