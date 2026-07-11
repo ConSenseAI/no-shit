@@ -18,6 +18,7 @@ F1 runs on this machine's disk budget in **staged rotation**: one host's image s
 |---|---|---|
 | `hosts/listmonk/` | Bulk seeding (200 subscribers in one ~1.2 s pass); campaign→sink full-list presence; unsubscribe round-trip over the app's own form (plain HTTP POST), state flip confirmed via the admin API; then the **presence+absence pair** — a second campaign delivered to every remaining subscriber with zero new mail to the unsubscribed address (`checkpoint("to:addr") → assert_none_new`) — the exact shape a clean unsubscribe-parity verdict certifies; double-opt-in confirm flow included. Finding: listmonk's sender is async and rate-limited, so **absence windows must anchor to the campaign-finished event, not a timer** (queued-but-unsent mail is a false-clean risk — feeds FIXTURES §7.1's residual-messaging window). | ~31 s |
 | `hosts/woocommerce/` | Bulk seeding (132 published products across 3 categories in one ~16 s pass — single `wp eval-file`, idempotent); the full **plain-HTTP storefront E2**: shop → `?wc-ajax=add_to_cart` (session cookie asserted) → cart → scraped checkout nonce → `?wc-ajax=checkout` POST (guest, Cash-on-Delivery) → order recorded, status/total cross-checked via WP-CLI; customer **and** admin order mail in the sink, order number cross-checked mail↔store; census-wide and per-address absence window **anchored between completed wp-cron flushes**, not timers; rung-3 clock proven: `DISABLE_WP_CRON` + `wp cron event run --due-now` as the only job trigger (Action Scheduler rides the same path). Findings: current WooCommerce ships block checkout — the leg pins classic shortcode pages to keep the scriptable `wc-ajax` path; coming-soon mode must be disabled or the storefront is curtained; WooCommerce Subscriptions is paid and **not** installed — free wordpress.org stand-ins recorded in the leg README. | ~88 s cold / ~52 s warm |
+| `hosts/twenty/` | The deliberate **co-location host** (nst+ndp+nli fixtures will live here) up cold in ~130 s (five services; first-boot migrations dominate); **batched seeding** — 120 companies + 120 people in one 0.64 s pass (~360 records/s) via the REST batch endpoints, verified by query-back; user-path entry over plain HTTP (workspace signup → token → authenticated reads); **invite-mail round-trip** captured in the sink with a host-reachable `SERVER_URL` link, plus the event-anchored absence pair (control address: 0 new; invitee: exactly 1, no residual); CSV export captured, row count == API total. Findings: Twenty v2.x env drift (`ENCRYPTION_KEY`, `EMAIL_DRIVER=SMTP`, `PG_DATABASE_URL`; PostgreSQL 16 required); auth mutations live on the `/metadata` GraphQL schema; single-tenant `signUp` is one-shot — later users arrive by invite; tokens must be re-minted after workspace activation; image is musl/Alpine, so F2 fake time takes the glibc-sidecar pattern aimed at the **worker** container. | ~130 s cold |
 **Serves:** [`validation/FIXTURES.md`](../validation/FIXTURES.md) §2 (the four amortized services) and §9 (F0 sequencing). The exit test, verbatim from there: *one fixture per host whose time script drives engine clock + app clock + sink jobs through a full trial-convert-cancel (resp. delete-confirm-window) cycle in minutes.*
 
 F0 converts the build plan's tooling claims (Stripe/Kill Bill clocks, LD_PRELOAD fake time, SMTP sink capture) into working fact before the bulk fixture build. Code is Apache-2.0 (see [`LICENSE-CODE`](../LICENSE-CODE)).
@@ -34,6 +35,7 @@ platform/
     ghost/            Stripe test-clock leg (rung 1): frozen-T0 advances + full subscription lifecycle 9/9
     listmonk/         F1 bench leg: bulk seeding, campaign→sink census, unsubscribe parity with per-address absence
     woocommerce/      F1 bench leg: storefront E2 (plain-HTTP checkout), bulk product seeding, rung-3 wp-cron clock
+    twenty/           F1 bench leg: co-location host bring-up, batched CRM seeding, invite-mail round-trip + absence
 ```
 
 Each host leg is a self-contained compose stack with its own Mailpit instance (per-fixture sink, per FIXTURES §2.2) and a deterministic `demo.sh` that brings the stack up, runs the proof, prints a virtual-time timeline, and tears down. Captured runs live in each leg's `TRANSCRIPT.md`.
@@ -54,6 +56,8 @@ Host-published ports are allocated here and nowhere else. Databases are **never*
 | listmonk | Mailpit UI / SMTP | 8029 / 1029 |
 | woocommerce | app | 8083 |
 | woocommerce | Mailpit UI / SMTP | 8028 / 1028 |
+| twenty | app | 3001 |
+| twenty | Mailpit UI / SMTP | 8030 / 1030 |
 
 **Forbidden:** port **4000** (a live service unrelated to this project runs there — never bind, probe, or interfere with it), plus locally occupied `4040 4369 5100 5200 5432 8766`.
 

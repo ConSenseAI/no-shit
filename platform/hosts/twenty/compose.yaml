@@ -1,0 +1,178 @@
+# noshit-f1-twenty — F1 platform proof, Twenty CRM leg.
+#
+# Proves the platform's HOST BRING-UP + BULK-SEEDING + MESSAGING-CAPTURE
+# services on a NEW, heavier host (FIXTURES §2.2 msg-channel census, §2.3 bulk
+# content). Twenty is the deliberate CO-LOCATION host (§3): the nst + ndp + nli
+# study fixtures will live on this same instance later, so this leg proves the
+# instance stands up cleanly and takes bulk records + real outbound mail before
+# any study content exists. This file is PUBLIC platform code (Apache-2.0):
+# no study fixtures, no labels, no implants.
+#
+# Host-published ports are loopback-only and limited to this leg's registry
+# allocation: app 3001, mailpit UI 8030 / SMTP 1030. Postgres AND Redis are on
+# the internal network ONLY and are NEVER host-published (the machine runs a
+# live Postgres on 5432).
+#
+# Shape follows Twenty's official compose (server + worker share one image; the
+# worker runs the BullMQ queue and is where scheduled jobs execute) with the
+# platform's durability conventions layered on: durable state bind-mounted under
+# /home/user/fixture-runtime/twenty/ (NOT docker named volumes — the docker
+# store here is volatile), Postgres run as the host uid so the documented
+# sudo-less reset works, and a per-fixture Mailpit sink with unbounded retention.
+name: noshit-f1-twenty
+
+services:
+  # --- Postgres 16: internal only, NEVER host-published -----------------------
+  # Twenty requires PostgreSQL 16 (its official compose pins postgres:16); pg15
+  # is not used. Runs as the host uid (1000:1000) so the bind-mounted data dir
+  # under /home/user/fixture-runtime stays host-owned and the documented reset
+  # path (`rm -rf /home/user/fixture-runtime/twenty/*`) works without sudo.
+  # PGDATA is a subdir of the mount (recommended for bind mounts). The default
+  # socket dir /var/run/postgresql is owned by the image's postgres uid and is
+  # not writable by uid 1000, so it is backed by a writable tmpfs; Twenty
+  # connects over TCP (host: db) and the healthcheck uses TCP. The `postgres`
+  # role is a SUPERUSER (needed so Twenty's migrations can CREATE EXTENSION).
+  db:
+    image: postgres:16-alpine
+    user: "1000:1000"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run ./setup.sh to generate .env}
+      POSTGRES_DB: default
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d default"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    tmpfs:
+      - /var/run/postgresql:mode=1777
+    volumes:
+      # Durable disk (NOT a named volume — the docker store here is volatile).
+      - /home/user/fixture-runtime/twenty/db:/var/lib/postgresql/data
+    networks: [internal]
+
+  # --- Redis: internal only, NEVER host-published -----------------------------
+  # Twenty's queue (BullMQ) REQUIRES the noeviction maxmemory policy — under any
+  # eviction policy BullMQ can silently drop job state. Ephemeral by design: the
+  # queue is rebuilt on boot (the server re-registers cron jobs), so no bind
+  # mount. The redis image prepends `redis-server` to a leading-dash arg.
+  redis:
+    image: redis:7-alpine
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # --- Mailpit: the per-fixture SMTP sink (msg-channel census) ----------------
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    environment:
+      # Accept whatever auth Twenty's SMTP client offers (incl. none) over the
+      # plaintext internal link, so invite / reset mail is captured reliably.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      # Never auto-prune: event-anchored absence windows must be sound over the
+      # whole run (platform no-prune-during-absence-windows rule).
+      MP_MAX_MESSAGES: "0"
+    ports:
+      - "127.0.0.1:8030:8025"   # UI + REST API (harness/mailsink.py talks here)
+      - "127.0.0.1:1030:1025"   # SMTP submission (Twenty sends here)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # --- Twenty server: the app under test (HTTP + REST/GraphQL API) ------------
+  # The server runs DB migrations on boot (DISABLE_DB_MIGRATIONS=false) and
+  # registers cron jobs (DISABLE_CRON_JOBS_REGISTRATION=false). SERVER_URL is the
+  # HOST-reachable origin so links inside emitted mail (invite / reset) resolve
+  # to a URL the host can follow. Email points at the in-network Mailpit sink.
+  # Image pinned by digest of twentycrm/twenty:v2.20.0 (verified 2026-07-11).
+  server:
+    image: twentycrm/twenty:v2.20.0@sha256:1d1c121c56a98fcc365cd8856f605230134958de924619fb1e03af2812c456ae
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      NODE_PORT: "3000"
+      PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?run ./setup.sh}@db:5432/default
+      REDIS_URL: redis://redis:6379
+      SERVER_URL: http://localhost:3001
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?run ./setup.sh to generate .env}
+      DISABLE_DB_MIGRATIONS: "false"
+      DISABLE_CRON_JOBS_REGISTRATION: "false"
+      STORAGE_TYPE: local
+      # First-workspace signup must be allowed (this is a single-tenant instance).
+      IS_MULTIWORKSPACE_ENABLED: "false"
+      # Email -> the sink. EMAIL_DRIVER enum is SMTP|LOGGER (default LOGGER =
+      # silent no-send), so SMTP must be set explicitly. Plaintext SMTP on
+      # mailpit:1025; mailpit accepts insecure/any auth. SERVER_URL (above)
+      # determines the links inside emitted mail (invite / reset).
+      EMAIL_DRIVER: SMTP
+      EMAIL_SMTP_HOST: mailpit
+      EMAIL_SMTP_PORT: "1025"
+      EMAIL_SMTP_USER: ""
+      EMAIL_SMTP_PASSWORD: ""
+      EMAIL_FROM_ADDRESS: fixture@twenty.test
+      EMAIL_FROM_NAME: "No Shit F1 Bench"
+    volumes:
+      - /home/user/fixture-runtime/twenty/server-local-storage:/app/packages/twenty-server/.local-storage
+    ports:
+      - "127.0.0.1:3001:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 180s
+    networks: [internal]
+
+  # --- Twenty worker: the BullMQ queue processor ------------------------------
+  # Same image, `yarn worker:prod`. This is where scheduled/async jobs (incl.
+  # email dispatch jobs) actually RUN — the target any fake-clock must reach in
+  # F2 (see README clock-story note). Migrations/cron registration are disabled
+  # here because the server already does them.
+  worker:
+    image: twentycrm/twenty:v2.20.0@sha256:1d1c121c56a98fcc365cd8856f605230134958de924619fb1e03af2812c456ae
+    restart: unless-stopped
+    command: ["yarn", "worker:prod"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+    environment:
+      PG_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?run ./setup.sh}@db:5432/default
+      REDIS_URL: redis://redis:6379
+      SERVER_URL: http://localhost:3001
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?run ./setup.sh to generate .env}
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+      STORAGE_TYPE: local
+      EMAIL_DRIVER: SMTP
+      EMAIL_SMTP_HOST: mailpit
+      EMAIL_SMTP_PORT: "1025"
+      EMAIL_SMTP_USER: ""
+      EMAIL_SMTP_PASSWORD: ""
+      EMAIL_FROM_ADDRESS: fixture@twenty.test
+      EMAIL_FROM_NAME: "No Shit F1 Bench"
+    volumes:
+      - /home/user/fixture-runtime/twenty/server-local-storage:/app/packages/twenty-server/.local-storage
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge
