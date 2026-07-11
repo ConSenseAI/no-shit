@@ -40,17 +40,14 @@ evidence, so an implant's deviation is diffable against a known-good baseline.
 | Mailpit SMTP | `127.0.0.1:1032` → `:1025` | Mastodon sends here internally |
 | Postgres, Redis | **none** | internal network only — **never** host-published |
 
-### 🛑 Streaming service OMITTED — the port-4000 hazard
+### Streaming service OMITTED — on merits
 
-Mastodon's **streaming** service listens on **port 4000** by default, and host
-port 4000 on this machine runs a **critical unrelated live service**. **This leg
-runs NO streaming container at all.** It is not needed for any proof here: the
-`web` (puma) container serves the full REST API and the web UI (which simply polls
-instead of receiving live pushes when streaming is absent), and every proof rides
-the REST API + session web endpoints. The Mastodon web image exposes only
-`3000/tcp`; nothing in `compose.yaml` publishes, exposes, or references host port
-4000. (Verified: `grep 4000 compose.yaml` matches only hazard-documenting
-comments.)
+**This leg runs no streaming container.** Mastodon's streaming service (live
+WebSocket pushes) is not needed for any proof here: the `web` (puma) container
+serves the full REST API and the web UI (which simply polls instead of receiving
+live pushes when streaming is absent), and every proof rides the REST API +
+session web endpoints. Omitting it is one image fewer to pull. The Mastodon web
+image exposes only `3000/tcp`.
 
 ## Image pins & sizes (all digest-pinned in `compose.yaml`, verified 2026-07-11)
 

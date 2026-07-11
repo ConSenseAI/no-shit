@@ -340,7 +340,7 @@ def main():
 
     phase("RESULT — F1 Mastodon nli★ bench proofs")
     for line in (
-        f"  host     : Mastodon {ver} up on 127.0.0.1:3002 (web+sidekiq; NO streaming — port-4000 hazard)",
+        f"  host     : Mastodon {ver} up on 127.0.0.1:3002 (web+sidekiq; streaming omitted — not needed)",
         f"  signup   : plain-HTTP /auth (CSRF+honeypots+agreement+3s gate) -> confirmation mail -> confirmed",
         f"  export   : following.csv {follow_data_rows} rows == following_count {following_count}; "
         f"{len(exports)} CSVs captured",

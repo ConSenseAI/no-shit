@@ -1,8 +1,8 @@
 # TRANSCRIPT — noshit-f1-mastodon (real runs, 2026-07-11)
 
 Host: `/dev/mapper/dmroot` 20 GB shared root. Docker via `sg docker -c`. All host
-ports loopback-only. Mastodon **v4.6.2** (web + sidekiq; **NO streaming — the
-streaming service's default port is 4000, a forbidden live-service port**).
+ports loopback-only. Mastodon **v4.6.2** (web + sidekiq; **no streaming — not
+needed for these proofs**).
 
 ## Summary
 
@@ -170,7 +170,7 @@ deletion (the absence). Every claim was made through `harness/mailsink.py`.
 
 - Repeatable demo verified green **cold (`--reset`) and warm** (exit 0).
 - Stack **DOWN** (scoped `docker compose -p noshit-f1-mastodon down`; no
-  containers remain; **nothing ever bound host port 4000**).
+  containers remain).
 - Durable state under `/home/user/fixture-runtime/mastodon/`: `db/` (54 MB
   Postgres), `redis/`, `system/` (media + archives), `captures/` (archive ZIPs +
   CSVs).

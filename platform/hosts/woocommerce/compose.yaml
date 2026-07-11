@@ -13,7 +13,7 @@
 # Host-published ports are loopback-only and limited to this leg's registry
 # allocation: app 8083, mailpit UI 8028 / SMTP 1028. MariaDB is on the internal
 # network ONLY and is NEVER host-published (the machine runs a live Postgres on
-# 5432; nothing else of ours goes near host DB ports — and NOTHING touches 4000).
+# 5432; nothing else of ours goes near host DB ports).
 #
 # Images pinned by digest (verified 2026-07-11):
 #   wordpress:latest  = WordPress 7.0.1, PHP 8.3.32-apache (762 MB)

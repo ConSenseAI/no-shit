@@ -8,13 +8,11 @@
 # against. This leg is PUBLIC platform/demo code (Apache-2.0): no study fixtures,
 # no labels, no implants.
 #
-# ── PORT-4000 HAZARD (hard rule) ────────────────────────────────────────────
-# Mastodon's STREAMING service listens on 4000 by default, and host port 4000
-# runs a critical unrelated live service. THIS COMPOSE HAS NO STREAMING SERVICE.
-# The `web` (puma) container serves the REST API and the web UI (which polls when
-# streaming is absent); every proof here rides the REST API + session web
-# endpoints, none of which need streaming. Nothing below publishes, exposes, or
-# references host port 4000. The Mastodon web image exposes only 3000/tcp.
+# ── STREAMING OMITTED (on merits) ────────────────────────────────────────────
+# THIS COMPOSE HAS NO STREAMING SERVICE. The `web` (puma) container serves the
+# REST API and the web UI (which polls when streaming is absent); every proof
+# here rides the REST API + session web endpoints, none of which need streaming.
+# Omitting it is one image fewer to pull. The web image exposes only 3000/tcp.
 #
 # Host-published ports are loopback-only and limited to this leg's registry
 # allocation: web 3002, mailpit UI 8032 / SMTP 1032. Postgres and Redis are on
@@ -135,7 +133,7 @@ services:
   # cannot run as another uid). public/system (media + account archives) is the
   # ONLY bind mount; setup.sh chowns it to 991. Schema is loaded out-of-band by
   # demo.sh BEFORE this service starts (staged bring-up), because /health needs a
-  # migrated DB. Streaming is intentionally ABSENT (port-4000 hazard).
+  # migrated DB. Streaming is intentionally ABSENT (not needed for these proofs).
   web:
     image: ghcr.io/mastodon/mastodon:v4.6.2@sha256:c5a92a6ec505086060a5a1fdec3be286da7f3cbd06e5158359e7f720e14b912c
     command: ["bundle", "exec", "puma", "-C", "config/puma.rb"]

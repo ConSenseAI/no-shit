@@ -60,7 +60,7 @@ python3 clockctl.py queues 10                  # block until notification queues
 
 Ports match the platform registry (killbill 8080, mailpit 8025/1025). The
 database is deliberately never published — the host runs its own Postgres on
-5432 and a live service on 4000, both untouched. All published ports bind
+5432, untouched. All published ports bind
 `127.0.0.1`. Cleanup is always scoped:
 
 ```bash
