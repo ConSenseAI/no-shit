@@ -1,0 +1,145 @@
+# noshit-f1-woocommerce — F1 platform proof, WooCommerce leg.
+#
+# Proves the platform's seeding + payment-spine + messaging-capture services on
+# a NEW host (FIXTURES §2.3 names "WooCommerce's test gateway" as part of the
+# payment spine; §2.2 msg-channel census; §2.3 bulk content, hundreds-per-
+# collection). The E2-shaped deliverable: a real customer checkout driven over
+# plain HTTP ("starts where the user starts"), the order-confirmation mail
+# captured in the leg's Mailpit sink and cross-checked against the store's
+# order record, then an ABSENCE window — anchored between completed
+# harness-triggered cron flushes, never a bare timer — held via
+# harness/mailsink.py (checkpoint → assert_none_new).
+#
+# Host-published ports are loopback-only and limited to this leg's registry
+# allocation: app 8083, mailpit UI 8028 / SMTP 1028. MariaDB is on the internal
+# network ONLY and is NEVER host-published (the machine runs a live Postgres on
+# 5432; nothing else of ours goes near host DB ports — and NOTHING touches 4000).
+#
+# Images pinned by digest (verified 2026-07-11):
+#   wordpress:latest  = WordPress 7.0.1, PHP 8.3.32-apache (762 MB)
+#   wordpress:cli     = WP-CLI 2.12.0, Alpine (207 MB)
+#   mariadb:lts       = MariaDB LTS (341 MB)
+#   axllent/mailpit:v1.30.4 — already present locally, reused (34 MB)
+name: noshit-f1-woocommerce
+
+# Shared WordPress env: the official image's wp-config-docker.php resolves
+# WORDPRESS_* through getenv at RUNTIME, so the apache and cli containers must
+# see identical values or they would disagree about the database.
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_USER: wordpress
+  WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?run ./setup.sh to generate .env}
+  WORDPRESS_DB_NAME: wordpress
+  # Fixture-grade clock config (FIXTURES §2.1 rung 3): page-hit cron OFF.
+  # WP-Cron jobs run ONLY when the harness fires them explicitly
+  # (`wp cron event run --due-now`) — scheduled work cannot leak into the
+  # timeline on page hits. Written into wp-config.php on first generation.
+  WORDPRESS_CONFIG_EXTRA: |
+    define('DISABLE_WP_CRON', true);
+  # mu-plugins/mailpit-smtp.php reads these to aim ALL wp_mail() at the sink.
+  NOSHIT_SMTP_HOST: mailpit
+  NOSHIT_SMTP_PORT: "1025"
+
+services:
+  # --- MariaDB: internal only, NEVER host-published ---------------------------
+  # Durable datadir bind-mounted under /home/user/fixture-runtime (NOT a named
+  # volume — the docker store here is volatile). The entrypoint chowns the
+  # datadir to the image's mysql uid; the documented reset path is therefore
+  # container-assisted (see README / demo.sh --reset).
+  db:
+    image: mariadb:lts@sha256:628f228f0fd5913a220438693576b29b6fe4dc1fa0a1298c0e98579fae28635f
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?run ./setup.sh to generate .env}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?run ./setup.sh to generate .env}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    volumes:
+      - /home/user/fixture-runtime/woocommerce/db:/var/lib/mysql
+    networks: [internal]
+
+  # --- Mailpit: the per-fixture SMTP sink (msg-channel census) ----------------
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    environment:
+      # Accept whatever auth PHPMailer offers (incl. none) over the plaintext
+      # internal link, so order mail is captured reliably.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      # Never auto-prune: absence windows must be sound over the whole run
+      # (platform no-prune-during-absence-windows rule).
+      MP_MAX_MESSAGES: "0"
+    ports:
+      - "127.0.0.1:8028:8025"   # UI + REST API (harness/mailsink.py talks here)
+      - "127.0.0.1:1028:1025"   # SMTP submission (WordPress mu-plugin sends here)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # --- WordPress: the real app under test -------------------------------------
+  # /var/www/html is durable (bind mount): the entrypoint populates WP core +
+  # wp-config.php on first boot and skips on re-runs. wp-content/mu-plugins is
+  # bind-mounted read-only from the repo — the SMTP-sink wiring is code, not
+  # state. Port 80 in-container; published loopback-only on 8083.
+  wordpress:
+    image: wordpress:latest@sha256:e36cd332ae0de78f3c3691e468c54c5540c0a74286b51eb9b5964fa1e9c916cd
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment: *wp-env
+    ports:
+      - "127.0.0.1:8083:80"
+    volumes:
+      - /home/user/fixture-runtime/woocommerce/html:/var/www/html
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+    healthcheck:
+      # curl is present in the official image. Pre-install "/" answers 302 to
+      # the installer (curl -f fails only on >=400), so this is healthy as soon
+      # as apache serves — install/config is gated separately by install.sh.
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:80/"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 90s
+    networks: [internal]
+
+  # --- WP-CLI tools container (never part of `up`; profiles: [tools]) ---------
+  # Invoked per-command: sg docker -c "docker compose -p noshit-f1-woocommerce
+  #   run --rm -T wpcli wp <args>". Runs as 33:33 — the Debian apache image's
+  # www-data — NOT the cli image's Alpine www-data (uid 82), so files it
+  # creates (plugins, uploads) stay owned by the uid apache serves them as.
+  wpcli:
+    image: wordpress:cli@sha256:f8aeb68164c6a04f5dcc91da30d8ffa096b0f7fafb7a65f144c2dd62587caca0
+    profiles: [tools]
+    user: "33:33"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *wp-env
+      WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
+      # Admin identity for install.sh — expanded INSIDE the container shell so
+      # the password never appears on a host-side command line or in output.
+      WP_ADMIN_USER: ${WP_ADMIN_USER:?run ./setup.sh to generate .env}
+      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD:?run ./setup.sh to generate .env}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL:?run ./setup.sh to generate .env}
+      WP_SITE_TITLE: ${WP_SITE_TITLE:?run ./setup.sh to generate .env}
+    volumes:
+      - /home/user/fixture-runtime/woocommerce/html:/var/www/html
+      - ./mu-plugins:/var/www/html/wp-content/mu-plugins:ro
+      - ./seed:/seed:ro
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge
