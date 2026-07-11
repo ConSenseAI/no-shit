@@ -1,0 +1,117 @@
+# noshit-f1-listmonk — F1 platform proof, Listmonk leg.
+#
+# Proves the platform's messaging-capture + seeding services on a NEW host
+# (FIXTURES §2.2 msg-channel census, §2.3 bulk content). The criterion-shaped
+# deliverable is the per-address ABSENCE assertion that clean unsubscribe
+# verdicts depend on (ATTAINABILITY O-2): after a subscriber unsubscribes, a
+# second campaign to the same list reaches the still-subscribed members
+# (presence) and the unsubscribed address NOTHING (absence) — asserted in one
+# script window via harness/mailsink.py.
+#
+# Host-published ports are loopback-only and limited to this leg's registry
+# allocation: app 9002, mailpit UI 8029 / SMTP 1029. Postgres is on the
+# internal network ONLY and is NEVER host-published (the machine runs a live
+# Postgres on 5432).
+name: noshit-f1-listmonk
+
+services:
+  # --- Postgres: internal only, NEVER host-published --------------------------
+  # Runs as the host uid (1000:1000) so the bind-mounted data directory under
+  # /home/user/fixture-runtime stays host-owned and the documented reset path
+  # (`rm -rf /home/user/fixture-runtime/listmonk/*`) works without sudo. PGDATA
+  # is a subdirectory of the mount (recommended for bind mounts). The default
+  # socket dir /var/run/postgresql is owned by the image's postgres uid and is
+  # not writable by uid 1000, so it is backed by a writable tmpfs (the entrypoint
+  # bootstrap psql connects over that socket). listmonk itself connects over TCP
+  # (host: db); the healthcheck also uses TCP.
+  db:
+    image: postgres:15-alpine
+    user: "1000:1000"
+    environment:
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run ./setup.sh to generate .env}
+      POSTGRES_DB: listmonk
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U listmonk -d listmonk"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    tmpfs:
+      - /var/run/postgresql:mode=1777
+    volumes:
+      # Durable disk (NOT a named volume — the docker store here is volatile).
+      - /home/user/fixture-runtime/listmonk/db:/var/lib/postgresql/data
+    networks: [internal]
+
+  # --- Mailpit: the per-fixture SMTP sink (msg-channel census) ----------------
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    environment:
+      # Accept whatever auth listmonk's SMTP client offers (incl. none) over the
+      # plaintext internal link, so campaign + opt-in mail is captured reliably.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      # Never auto-prune: per-address absence windows must be sound over the
+      # whole run (platform no-prune-during-absence-windows rule).
+      MP_MAX_MESSAGES: "0"
+    ports:
+      - "127.0.0.1:8029:8025"   # UI + REST API (harness/mailsink.py talks here)
+      - "127.0.0.1:1029:1025"   # SMTP submission (listmonk sends here)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+
+  # --- listmonk: the real app under test --------------------------------------
+  # Non-interactive install driven entirely by env vars (no config.toml, hence
+  # --config ''): --install --idempotent seeds the schema once on an empty DB;
+  # --upgrade runs migrations on image bumps; then the server runs. The Super
+  # Admin is auto-created from LISTMONK_ADMIN_USER / LISTMONK_ADMIN_PASSWORD on
+  # first install (listmonk >= 3.0). SMTP is NOT an env/config setting in v1+ —
+  # it lives in DB-backed settings and is pointed at mailpit by demo.py/seed.py
+  # via the /api/settings API (see README).
+  #
+  # Image pinned by digest of listmonk/listmonk:v6.2.0 verified 2026-07-11.
+  # restart: unless-stopped — saving settings triggers an in-app reload; the
+  # restart policy keeps the leg resilient across that reload.
+  app:
+    image: listmonk/listmonk:v6.2.0@sha256:f535d59e14991337a9f2d570273685378ae86b0d7698c3e00da444e3bc205286
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    command: ["sh", "-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''"]
+    environment:
+      LISTMONK_app__address: "0.0.0.0:9000"
+      LISTMONK_db__host: db
+      LISTMONK_db__port: "5432"
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${POSTGRES_PASSWORD:?run ./setup.sh to generate .env}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_db__max_open: "25"
+      LISTMONK_db__max_idle: "25"
+      LISTMONK_db__max_lifetime: "300s"
+      # Auto-create the Super Admin on first install (used by the API clients).
+      LISTMONK_ADMIN_USER: ${LISTMONK_ADMIN_USER:?run ./setup.sh to generate .env}
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD:?run ./setup.sh to generate .env}
+      TZ: Etc/UTC
+    ports:
+      - "127.0.0.1:9002:9000"
+    healthcheck:
+      # /health is listmonk's PUBLIC health endpoint; /api/health requires auth in v6.
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:9000/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge

@@ -1,0 +1,7 @@
+# Generated locally by setup.sh — never commit secrets or runtime state.
+.env
+__pycache__/
+*.pyc
+*.log
+# Postgres data lives OUTSIDE the repo at /home/user/fixture-runtime/listmonk/
+# (durable disk); nothing runtime is written under this directory.

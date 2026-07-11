@@ -1,6 +1,6 @@
 # Fixture Platform
 
-**Status: F0 proven (2026-07-10).** The first running code in this repository — all four platform services demonstrated across three host legs, every demo deterministic from a cold start and independently re-run by the coordinator before commit.
+**Status: F0 proven (2026-07-10) · F1 staged build underway (2026-07-11).** The first running code in this repository — all four platform services demonstrated across three host legs, every demo deterministic from a cold start and independently re-run by the coordinator before commit. F1 (the E2 bulk phase, FIXTURES §9) now brings the remaining bench hosts up as staged legs.
 
 | Leg | What it proved | Wall time |
 |---|---|---|
@@ -9,6 +9,14 @@
 | `hosts/ghost/` | Stripe sandbox test clock: frozen T0, advances landing exact `frozen_time`, forward-only invariant enforced, delete-cascade cleanup; Ghost member signup→magic-link→stored-member with mail in the sink (9/9); **full subscription lifecycle proven 9/9 once the key was re-scoped** — trialing → `trial_will_end` observed → $12.00 invoice paid at T0+8d1h → canceled at boundary, 39 virtual days in 31 s | ~28–45 s |
 
 The Stripe subscription-lifecycle facts first ran as `BLOCKED: scope` (test-clock-only key), then **proved 9/9 the same day** after the operator re-scoped the key — `stripe-clockctl.py`'s capability-adaptive upgrade working as designed. Remaining F1 items on this leg: Ghost **billing coupling** (Stripe tiers inside Ghost member state — needs a webhook path, not just scopes) and production-parity MySQL. F0's empirical findings are folded into [`validation/FIXTURES.md`](../validation/FIXTURES.md) §2.1–§2.2 (0.1.1).
+
+## F1 bench legs (staged)
+
+F1 runs on this machine's disk budget in **staged rotation**: one host's image set at a time; images are volatile and re-pullable (pinned by digest), so they are pruned between hosts once a leg's artifacts are banked. Anything that must survive — seeded databases, captures — is bind-mounted under `/home/user/fixture-runtime/<leg>/` on the durable volume, never in docker named volumes (the docker store on this machine does not persist across reboots).
+
+| Leg | What it proved | Wall time |
+|---|---|---|
+| `hosts/listmonk/` | Bulk seeding (200 subscribers in one ~1.2 s pass); campaign→sink full-list presence; unsubscribe round-trip over the app's own form (plain HTTP POST), state flip confirmed via the admin API; then the **presence+absence pair** — a second campaign delivered to every remaining subscriber with zero new mail to the unsubscribed address (`checkpoint("to:addr") → assert_none_new`) — the exact shape a clean unsubscribe-parity verdict certifies; double-opt-in confirm flow included. Finding: listmonk's sender is async and rate-limited, so **absence windows must anchor to the campaign-finished event, not a timer** (queued-but-unsent mail is a false-clean risk — feeds FIXTURES §7.1's residual-messaging window). | ~31 s |
 **Serves:** [`validation/FIXTURES.md`](../validation/FIXTURES.md) §2 (the four amortized services) and §9 (F0 sequencing). The exit test, verbatim from there: *one fixture per host whose time script drives engine clock + app clock + sink jobs through a full trial-convert-cancel (resp. delete-confirm-window) cycle in minutes.*
 
 F0 converts the build plan's tooling claims (Stripe/Kill Bill clocks, LD_PRELOAD fake time, SMTP sink capture) into working fact before the bulk fixture build. Code is Apache-2.0 (see [`LICENSE-CODE`](../LICENSE-CODE)).
@@ -22,7 +30,8 @@ platform/
   hosts/
     killbill/         engine-native clock leg (FIXTURES §2.1 rung 1): trial → conversion → cancel via /1.0/kb/test/clock
     documenso/        stack-fake-time leg (rungs 2–3): deletion flow + sink absence window + persona stub
-    ghost/            STAGED — Stripe test-clock leg; blocked on a Stripe sandbox key
+    ghost/            Stripe test-clock leg (rung 1): frozen-T0 advances + full subscription lifecycle 9/9
+    listmonk/         F1 bench leg: bulk seeding, campaign→sink census, unsubscribe parity with per-address absence
 ```
 
 Each host leg is a self-contained compose stack with its own Mailpit instance (per-fixture sink, per FIXTURES §2.2) and a deterministic `demo.sh` that brings the stack up, runs the proof, prints a virtual-time timeline, and tears down. Captured runs live in each leg's `TRANSCRIPT.md`.
@@ -37,15 +46,19 @@ Host-published ports are allocated here and nowhere else. Databases are **never*
 | killbill | Mailpit UI / SMTP | 8025 / 1025 |
 | documenso | app | 3600 |
 | documenso | Mailpit UI / SMTP | 8026 / 1026 |
-| ghost (staged) | app | 2368 |
-| ghost (staged) | Mailpit UI / SMTP | 8027 / 1027 |
+| ghost | app | 2368 |
+| ghost | Mailpit UI / SMTP | 8027 / 1027 |
+| listmonk | app | 9002 |
+| listmonk | Mailpit UI / SMTP | 8029 / 1029 |
+| woocommerce | app | 8083 |
+| woocommerce | Mailpit UI / SMTP | 8028 / 1028 |
 
 **Forbidden:** port **4000** (a live service unrelated to this project runs there — never bind, probe, or interfere with it), plus locally occupied `4040 4369 5100 5200 5432 8766`.
 
 ## Run conventions
 
 - Docker group membership isn't in the login session's credentials on this machine; run everything as `sg docker -c "docker compose ..."`.
-- Compose project names: `noshit-f0-<leg>` — cleanup is always scoped (`docker compose -p noshit-f0-<leg> down -v`), never global.
+- Compose project names: `noshit-f0-<leg>` / `noshit-f1-<leg>` by phase — cleanup is always scoped (`docker compose -p <project> down`), never global.
 - Secrets: none committed. Each leg ships `.env.example`; real `.env` files are generated locally and gitignored.
 
 ## What never lives here
