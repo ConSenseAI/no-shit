@@ -1,0 +1,9 @@
+# Generated locally — never commit secrets or runtime state.
+.env
+.env.tmp
+__pycache__/
+*.pyc
+*.log
+# The rendered launcher yml, the built image, and all durable state (postgres,
+# uploads, redis, the minted API key) live OUTSIDE the repo under
+# /home/user/fixture-runtime/discourse/ — nothing runtime is written here.

@@ -1,6 +1,6 @@
 # Fixture Build Plan
 
-**Version:** 0.1.3 · **Status:** draft — §2's platform claims F0-proven 2026-07-10; F1 staged bench build underway 2026-07-11 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
+**Version:** 0.1.4 · **Status:** draft — §2's platform claims F0-proven 2026-07-10; F1 staged bench build underway 2026-07-11 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
 **Serves:** [`PROTOCOL.md`](PROTOCOL.md) §12.4 (fixture build plan and budget — this document is the plan; dollar figures and final numeric QA thresholds are fixed at freeze per §2) and §12.9 (observation-procedure parameters — §7 below drafts the proposals the freeze pins)
 **Consumes:** [`ATTAINABILITY.md`](ATTAINABILITY.md) — the demand tables (§2–§3), findings O-1…O-10, the host bench (§5.3), the gap analysis (§6), and the §7 recommendations this plan converts into build items
 **Platform tooling facts as of:** 2026-07-09 — documentation-level verification, tagged inline; F0 (§9) converts them to working fact
@@ -53,7 +53,7 @@ The verified bench from ATTAINABILITY §5.3, turned into build assignments:
 | **Ghost** + MIT Stripe starters | nst★ ndp | flagship `nst` implant hosts — native full subscription lifecycle (tiers, carded trial, checkout, retention offer, cancel); Stripe test clocks |
 | **WooCommerce + Subscriptions** | ndp★ nst | storefront patterns: scarcity, social proof, drip pricing, countdowns — **pure implants** (no surveyed OSS host ships these natively); most consumer-realistic checkout. F1 note (2026-07-11): WooCommerce Subscriptions is commercially distributed (paid, GPL) — build-time decision: one paid license or a free wordpress.org stand-in (`subscriptions-for-woocommerce`, `flexible-subscriptions`); the bench leg is proven without it |
 | **Twenty CRM** | nst ndp nli | the deliberate-co-location fixtures (limited by rule 1); avoid enterprise-marked files |
-| **Discourse** + MIT subscriptions plugin | nst | cheapest-to-audit diffs — the implant lives entirely in the small MIT plugin; ready-made "cancel silently fails" shape (webhook-dependent cancel) |
+| **Discourse** + MIT subscriptions plugin | nst | cheapest-to-audit diffs — the implant lives entirely in the small MIT plugin; ready-made "cancel silently fails" shape (webhook-dependent cancel). F1 note (2026-07-11): discourse-subscriptions is now bundled into Discourse core (standalone repo archived 2025-07-14; license still MIT) — the plugin directory remains the small implant surface, pinned via the core SHA |
 | **Documenso** | nli★ | deletion-flow implants + textbook clean baseline (retention/anonymization messaging) |
 | **Mastodon** | nli★ | gold-standard export/migration/delete baseline; degradation implants built *against* it |
 | **Rocket.Chat** | nst nli | tier-asymmetric cancel parity; GDPR export + self-delete (heavy setup — later phase) |
@@ -145,6 +145,8 @@ By the demand tier mix (E1 21 · E2 80 · E3 44 · E4 7, which the sealed set mi
 - Live-lane calendar time is irreducible: annual-cycle facts are out of live reach within any reasonable study window (fixture-only, per O-1), and backend-truth facts remain fixture/enforcement-only (O-3) — both stated external-validity limits of the behavioral tier, carried into the report.
 
 ## 12. Changelog
+
+- **0.1.4** (2026-07-11) — §3 Discourse row: discourse-subscriptions is bundled into Discourse core (standalone repo archived 2025-07-14; still MIT; plugin dir remains the implant surface, pinned via the core SHA) — found during the F1 discourse leg and independently verified against the archived repo. No plan changes.
 
 - **0.1.3** (2026-07-11) — F1 stage 1: first two bench legs proven (listmonk, WooCommerce — `platform/` F1 table). Findings folded: §2.2 gains the event-anchored absence-window rule (async/rate-limited senders make timer-closed windows a false-clean path); §3's WooCommerce row records the Subscriptions licensing constraint (paid plugin — license-or-stand-in decision at build). §9's F1 item marked underway. No plan-structure changes.
 

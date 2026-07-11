@@ -1,0 +1,47 @@
+# noshit-f1-discourse — the per-fixture SMTP sink (FIXTURES §2.2 msg-channel census).
+#
+# Discourse itself is brought up by the official discourse_docker LAUNCHER (not
+# compose), because the canonical production-parity deploy IS the launcher. The
+# sink, however, is a plain container, so it stays a tiny compose stack — the
+# same Mailpit shape every other leg uses. The two are wired together by a
+# shared, user-defined bridge network (created by setup.sh, joined here as an
+# EXTERNAL network and by the launcher via `docker_args: --network ...`).
+#
+# On that shared network this service is reachable as `mailpit` (compose adds
+# the service name as a network alias), so the Discourse container sends to
+# mailpit:1025 internally. The host-published ports below are for the HARNESS
+# (harness/mailsink.py talks to the REST API on 8031) and are loopback-only,
+# limited to this leg's registry allocation. SMTP 1031 is published for parity/
+# debug; the app does not use it (it uses the internal :1025 over the network).
+name: noshit-f1-discourse
+
+services:
+  mailpit:
+    image: axllent/mailpit:v1.30.4@sha256:5a49a77c5bdbe7c5474450b4f46348d09949df3695257729c93a30369382d4f6
+    environment:
+      # Accept whatever auth Discourse's SMTP client offers (here: none) over
+      # the plaintext internal link, so activation/notification mail is captured.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      # Never auto-prune: per-address absence windows must be sound across the
+      # whole run (platform no-prune-during-absence-windows rule).
+      MP_MAX_MESSAGES: "0"
+    ports:
+      - "127.0.0.1:8031:8025"   # UI + REST API (harness/mailsink.py talks here)
+      - "127.0.0.1:1031:1025"   # SMTP (parity/debug; app uses internal mailpit:1025)
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      default:
+        aliases: [mailpit]
+
+# The shared bridge is created by setup.sh (docker network create) and referenced
+# here as external so both this compose stack AND the launcher-managed Discourse
+# container land on the same L2 segment with working name resolution.
+networks:
+  default:
+    external: true
+    name: noshit-f1-discourse-net

@@ -1,0 +1,149 @@
+## noshit-f1-discourse — launcher container config TEMPLATE (Option A).
+##
+## This is the SOURCE template. setup.sh renders it (one sed of the developer
+## email placeholder) into the launcher's own tree:
+##     /home/user/fixture-runtime/discourse/discourse_docker/containers/noshit-f1-discourse.yml
+## Third-party launcher code lives OUTSIDE the repo; this template + the scripts
+## + the docs are the leg's own artifacts. There are NO secrets in this file:
+## the developer email is a fixture identifier, SMTP is unauthenticated (mailpit
+## accepts any/none), and Postgres runs INTERNAL to the container (never
+## host-published). The admin API key is minted at provision time by a rails
+## runner and written to a gitignored .env — it never appears here.
+##
+## Pins (local build — pins live in config + docs, not a registry digest):
+##   base image     : discourse/base:2.0.20260706-0040
+##                    amd64 @ sha256:b0678546cd0835b72b5f9c92888aa936cad92f72781eb6523725eb99faca91db
+##   discourse core : bf386c2fa76e9aa49ecc225b02271ef062b2ad70 (main @ 2026-07-06,
+##                    the exact commit BAKED into the base image — see params.version)
+##   subscriptions  : BUNDLED in core at that SHA (plugins/discourse-subscriptions v2.8.1) —
+##                    NOT cloned (launcher BUNDLED_PLUGINS rejects cloning bundled plugins).
+##
+## After editing this file you MUST re-render (setup.sh) and rebuild:
+##     ./bootstrap.sh    (wraps `launcher bootstrap noshit-f1-discourse`)
+
+templates:
+  - "templates/postgres.template.yml"
+  - "templates/redis.template.yml"
+  - "templates/web.template.yml"
+  ## web.ratelimited.template.yml is deliberately OMITTED: it installs nginx
+  ## abuse rate-limiting that would throttle the deterministic bulk-seed pass
+  ## (>=50 topics via the admin API in one shot). This is a bench host, not a
+  ## public forum — the rate limiting we DO care about (Discourse app-level
+  ## create-topic limits) is handled in demo.py via recorded site-setting edits.
+
+## Loopback-only, this leg's registry allocation. Ruby YAML sees the colons and
+## emits `-p 127.0.0.1:8084:80` (host loopback 8084 -> container nginx :80).
+expose:
+  - "127.0.0.1:8084:80"
+
+## The launcher appends `docker_args` verbatim to every `docker run` it issues,
+## including the final `start`. We attach the container to a shared user-defined
+## bridge so it can reach the mailpit sink by name. host-gateway does NOT work
+## here (mailpit is published on 127.0.0.1 only, not on the docker bridge IP),
+## so a shared network is the plumbing that lets DISCOURSE_SMTP_ADDRESS=mailpit
+## resolve. setup.sh creates this network BEFORE any launcher call.
+docker_args: "--network noshit-f1-discourse-net"
+
+params:
+  ## Pinned to the EXACT commit baked into discourse/base:2.0.20260706-0040
+  ## (main @ 2026-07-06T10:02+10:00, read from the image's /var/www/discourse).
+  ## Rationale: the base image ships vendor/bundle (836M) + node_modules (786M)
+  ## built AT this commit, so pinning to it makes the bootstrap's git checkout /
+  ## bundle install / pnpm install near-no-ops — the smallest possible build
+  ## delta (RW layer, disk peak, wall time) on this shared-disk host. This SHA
+  ## is a few days past the v2026.6.0 stable tag (9603883194...); the bundled
+  ## discourse-subscriptions plugin (v2.8.1) is present at both. A 40-char SHA
+  ## is as hard a pin as a tag.
+  version: bf386c2fa76e9aa49ecc225b02271ef062b2ad70
+  db_default_text_search_config: "pg_catalog.english"
+
+env:
+  LC_ALL: en_US.UTF-8
+  LANG: en_US.UTF-8
+  LANGUAGE: en_US.UTF-8
+
+  ## Discourse refuses a bare IP; the canonical host is localhost. The app is
+  ## reached on the host at 127.0.0.1:8084 (== localhost:8084). Email bodies
+  ## therefore carry links to http://localhost/... (port 80, unmapped) — demo.py
+  ## extracts the activation TOKEN and submits it against the mapped loopback
+  ## port 8084, which is what actually matters. Documented in README (deviation).
+  DISCOURSE_HOSTNAME: "localhost"
+
+  ## Emails matching this list are made admin+developer on signup. The leg also
+  ## mints the admin directly via a rails runner (provision/admin_seed.rb), so
+  ## an active admin + API key exist deterministically without a UI round-trip.
+  DISCOURSE_DEVELOPER_EMAILS: "@@DEVELOPER_EMAILS@@"
+
+  ## Admin-API request budget (GlobalSetting, NOT a site setting — env only).
+  ## Default is 60/min; the deterministic bulk seed (>=50 POST /posts.json in
+  ## one pass) plus the proof's other admin calls crossed it on the first live
+  ## run (429 "wait 30 seconds" at topic 46). Bench host, loopback-only: raised
+  ## so one seed pass fits in one window. Recorded as a deviation in README.
+  DISCOURSE_MAX_ADMIN_API_REQS_PER_MINUTE: 400
+
+  ## --- SMTP -> the per-fixture mailpit sink (FIXTURES §2.2 msg-channel census).
+  ## Reached over the shared docker network by service name. Unauthenticated,
+  ## plaintext (no STARTTLS, no implicit TLS) — mailpit is configured to accept
+  ## any/none. No USER_NAME/PASSWORD keys: Discourse sends without auth.
+  DISCOURSE_SMTP_ADDRESS: mailpit
+  DISCOURSE_SMTP_PORT: 1025
+  DISCOURSE_SMTP_ENABLE_START_TLS: false
+  DISCOURSE_SMTP_FORCE_TLS: false
+  DISCOURSE_SMTP_OPENSSL_VERIFY_MODE: none
+  DISCOURSE_SMTP_DOMAIN: noshit.test
+  DISCOURSE_NOTIFICATION_EMAIL: noreply@noshit.test
+
+## The container is stateless; everything durable (postgres, uploads, redis,
+## logs) lives under /shared, bind-mounted to the durable disk OUTSIDE the repo.
+## The docker store on this machine does not survive reboots — this bind mount
+## is what makes the seeded forum durable.
+##
+## build-rw/ SHUNT (disk-model adaptation for this shared-disk host): the two
+## biggest write-heavy paths the bootstrap creates (verified ABSENT in the base
+## image — they ARE build delta) are bind-mounted out of the container's overlay
+## layer: rails tmp and the sprockets output public/assets. Bind-mounted content
+## bypasses the overlay RW layer AND is excluded from the launcher's `docker
+## commit`, so those bytes land ONCE on the durable disk instead of twice
+## (overlay + committed layer). Consequence (README deviations): the committed
+## image does NOT contain compiled public/assets; the run-phase container serves
+## them from the same mounts, which the launcher applies identically at `start`
+## (one yml drives bootstrap and start). Container discourse uid 1000 == host
+## user, so bind-writes need no chown. setup.sh creates the dirs; bootstrap.sh
+## wipes build-rw/* before each build; demo.sh --reset does NOT touch build-rw
+## (image-side state, not data).
+##
+## Deliberately NOT bind-mounted: the ember build tree. First attempt mounted
+## dist/tmp under app/assets/javascripts/ — but at this core SHA the frontend
+## has MOVED to /var/www/discourse/frontend, and .pnpmfile.cjs treats an
+## app/assets/javascripts dir as legacy cruft and `git clean -f -X`-cleans it;
+## docker's mkdir-for-bind CREATED that path, and mount points are undeletable,
+## so pnpm (and the bootstrap) failed. Ember scratch is handled instead by the
+## pre-commit rm in `run:` below (those bytes live in THIS container's overlay
+## upperdir, so deleting them genuinely frees disk before the commit copy).
+volumes:
+  - volume:
+      host: /home/user/fixture-runtime/discourse/shared/standalone
+      guest: /shared
+  - volume:
+      host: /home/user/fixture-runtime/discourse/shared/standalone/log/var-log
+      guest: /var/log
+  - volume:
+      host: /home/user/fixture-runtime/discourse/build-rw/app-tmp
+      guest: /var/www/discourse/tmp
+  - volume:
+      host: /home/user/fixture-runtime/discourse/build-rw/public-assets
+      guest: /var/www/discourse/public/assets
+
+## No plugin hooks: discourse-subscriptions is bundled in core (proof 5 is
+## install-only + prove-it-loads, satisfied by the bundled copy) and we skip
+## docker_manager to keep the build lean under the disk budget.
+
+run:
+  ## Drop build scratch at the END of pups (before the launcher's commit phase):
+  ## tmp/cache sits on the app-tmp bind (rails recreates it at boot); the ember
+  ## build's scratch `tmp` dirs under frontend/ were created in THIS container's
+  ## overlay upperdir, so removing them genuinely frees host disk right when the
+  ## commit copy needs headroom (the built dist output is kept).
+  - exec: rm -rf /var/www/discourse/tmp/cache
+  - exec: sh -c "find /var/www/discourse/frontend -maxdepth 3 -type d -name tmp -exec rm -rf {} + 2>/dev/null; true"
+  - exec: echo "== noshit-f1-discourse build complete (core bf386c2f @ 2026-07-06, subscriptions bundled) =="
