@@ -1,6 +1,6 @@
 # Fixture Build Plan
 
-**Version:** 0.1.2 · **Status:** draft — §2's platform claims F0-proven 2026-07-10 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
+**Version:** 0.1.3 · **Status:** draft — §2's platform claims F0-proven 2026-07-10; F1 staged bench build underway 2026-07-11 ([`platform/`](../platform/)); §7's stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md)
 **Serves:** [`PROTOCOL.md`](PROTOCOL.md) §12.4 (fixture build plan and budget — this document is the plan; dollar figures and final numeric QA thresholds are fixed at freeze per §2) and §12.9 (observation-procedure parameters — §7 below drafts the proposals the freeze pins)
 **Consumes:** [`ATTAINABILITY.md`](ATTAINABILITY.md) — the demand tables (§2–§3), findings O-1…O-10, the host bench (§5.3), the gap analysis (§6), and the §7 recommendations this plan converts into build items
 **Platform tooling facts as of:** 2026-07-09 — documentation-level verification, tagged inline; F0 (§9) converts them to working fact
@@ -34,7 +34,7 @@ Mechanism ladder, chosen per host:
 
 ### 2.2 Messaging capture with absence monitoring (O-2, the `msg` channel)
 
-A per-fixture SMTP sink (Mailpit-class; F0-verified) captures all outbound mail; **the sink log is the msg-channel census**, and sink retention must be unbounded while any absence window is open (no auto-prune). Absence claims take the form "no message matching M within script window [T0+a, T0+b]" and are first-class evidence artifacts — log excerpt plus window citation — because clean verdicts are absence verdicts and a missed message is a false-PASS path (O-2). Non-mail channels (SMS, push) follow the same pattern through provider-sandbox sinks or host-level notification interception.
+A per-fixture SMTP sink (Mailpit-class; F0-verified) captures all outbound mail; **the sink log is the msg-channel census**, and sink retention must be unbounded while any absence window is open (no auto-prune). Absence claims take the form "no message matching M within script window [T0+a, T0+b]" and are first-class evidence artifacts — log excerpt plus window citation — because clean verdicts are absence verdicts and a missed message is a false-PASS path (O-2). Non-mail channels (SMS, push) follow the same pattern through provider-sandbox sinks or host-level notification interception. **F1 finding (2026-07-11): absence windows anchor to completed-delivery events, never timers.** Host senders are asynchronous and rate-limited (listmonk's campaign queue) or flush-cycled (wp-cron); mail queued but unsent when a timer closes the window is a false-clean path. The platform pattern: open the window on a sender-finished signal (campaign-finished status, completed cron flush), close it the same way, and reserve `settle` margins for transport latency only.
 
 ### 2.3 State seeding and the payment spine (`acct*`, O-8)
 
@@ -51,7 +51,7 @@ The verified bench from ATTAINABILITY §5.3, turned into build assignments:
 | Host | Criteria | Assignment |
 |---|---|---|
 | **Ghost** + MIT Stripe starters | nst★ ndp | flagship `nst` implant hosts — native full subscription lifecycle (tiers, carded trial, checkout, retention offer, cancel); Stripe test clocks |
-| **WooCommerce + Subscriptions** | ndp★ nst | storefront patterns: scarcity, social proof, drip pricing, countdowns — **pure implants** (no surveyed OSS host ships these natively); most consumer-realistic checkout |
+| **WooCommerce + Subscriptions** | ndp★ nst | storefront patterns: scarcity, social proof, drip pricing, countdowns — **pure implants** (no surveyed OSS host ships these natively); most consumer-realistic checkout. F1 note (2026-07-11): WooCommerce Subscriptions is commercially distributed (paid, GPL) — build-time decision: one paid license or a free wordpress.org stand-in (`subscriptions-for-woocommerce`, `flexible-subscriptions`); the bench leg is proven without it |
 | **Twenty CRM** | nst ndp nli | the deliberate-co-location fixtures (limited by rule 1); avoid enterprise-marked files |
 | **Discourse** + MIT subscriptions plugin | nst | cheapest-to-audit diffs — the implant lives entirely in the small MIT plugin; ready-made "cancel silently fails" shape (webhook-dependent cancel) |
 | **Documenso** | nli★ | deletion-flow implants + textbook clean baseline (retention/anonymization messaging) |
@@ -128,7 +128,7 @@ qa: {indistinguishability, fidelity, construction_check, live_recheck}
 ## 9. Sequencing
 
 - **F0 — platform proof.** The four services stood up on two flagship hosts (Ghost for the `nst` shape, Documenso or Mastodon for the `nli` shape); the exit test is one fixture per host whose time script drives engine clock + app clock + sink jobs through a full trial-convert-cancel (resp. delete-confirm-window) cycle in minutes. F0 converts §2.1's tooling claims into working fact. **Done (2026-07-10, [`platform/`](../platform/)), three legs:** Kill Bill — full trial→convert→$29.95-charge→cancel-at-boundary on the engine clock, 39 virtual days in ~96 s, plugin invoice/payment mail in the sink; Documenso — real signup→verify→delete flow, +31 virtual days in seconds via the glibc sidecar, post-deletion absence window held, persona round-trip; Ghost + Stripe — sandbox test-clock script landing exact `frozen_time` at every position with forward-only enforced, Ghost member→sink flow 9/9 (subscription-lifecycle facts pending a broader-scoped key — the tooling auto-upgrades). Findings folded into §2.1–§2.2 (0.1.1).
-- **F1 — E2 bulk.** The volume phase: stateful single-sitting flows (80 of 152 public shapes are E2) across the bench, host-amortized.
+- **F1 — E2 bulk.** The volume phase: stateful single-sitting flows (80 of 152 public shapes are E2) across the bench, host-amortized. **Underway (2026-07-11)** — first two staged bench legs proven: listmonk (bulk seed, campaign→sink census, unsubscribe parity with per-address absence) and WooCommerce (132-product one-pass seed, plain-HTTP checkout E2, cron-flush-anchored absence, rung-3 clock). Build-machine disk model: staged rotation — digest-pinned images pruned between hosts, durable state bind-mounted outside the docker store.
 - **F2 — E3.** Clock-dependent fixtures (44 shapes) — cheap once F0's clock works; mostly time scripts and messaging jobs.
 - **F3 — E4 + red team.** Conditional serving and dual-origin probe infrastructure last, because both sides must exist to test either.
 - **Parallel from day 0 — Lane 4.** Live `nli` execution-verified probing is calendar-bound (real deletion windows, real export SLAs); it starts before everything else and runs alongside.
@@ -145,6 +145,8 @@ By the demand tier mix (E1 21 · E2 80 · E3 44 · E4 7, which the sealed set mi
 - Live-lane calendar time is irreducible: annual-cycle facts are out of live reach within any reasonable study window (fixture-only, per O-1), and backend-truth facts remain fixture/enforcement-only (O-3) — both stated external-validity limits of the behavioral tier, carried into the report.
 
 ## 12. Changelog
+
+- **0.1.3** (2026-07-11) — F1 stage 1: first two bench legs proven (listmonk, WooCommerce — `platform/` F1 table). Findings folded: §2.2 gains the event-anchored absence-window rule (async/rate-limited senders make timer-closed windows a false-clean path); §3's WooCommerce row records the Subscriptions licensing constraint (paid plugin — license-or-stand-in decision at build). §9's F1 item marked underway. No plan-structure changes.
 
 - **0.1.2** (2026-07-10) — §7's four proposal stubs expanded to row grain at [`OBSERVATION-PARAMS.md`](OBSERVATION-PARAMS.md) 0.1.0; pointer added. No plan changes.
 
