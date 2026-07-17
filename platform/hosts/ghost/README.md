@@ -173,7 +173,8 @@ does not touch fixture realism).
 The key lives only in gitignored `.env` (mode 600), is read directly by the
 Python tools, and is **never** passed into the Ghost container, echoed, logged,
 or committed. All tool output runs through a `mask()` that redacts
-`rk_/sk_/pk_/whsec_` tokens (including inside error/exception text) to
-`rk_test_***`. On the last day of the sandbox account, `stripe-clockctl.py
+`rk_/sk_/pk_/whsec_` tokens (including inside error/exception text, Stripe's own
+partially-starred echo form, and `acct_` account IDs) to `rk_test_***`. On the
+last day of the sandbox account, `stripe-clockctl.py
 cleanup` removes any tool-owned clocks; the demo already deletes its clock
 (cascading customers/subscriptions) on every run unless `--keep`.

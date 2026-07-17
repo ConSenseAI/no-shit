@@ -23,7 +23,8 @@ CAPABILITY-ADAPTIVE. It probes the key first:
 
 Security: the key is read from $STRIPE_SECRET_KEY or ./.env and never printed.
 All output passes through mask() which redacts rk_/sk_/pk_/whsec_ tokens to
-e.g. rk_test_*** — including error and exception text.
+e.g. rk_test_*** — including error and exception text, Stripe's own partially
+starred echo form (rk_test_****abcd), and acct_ account identifiers.
 
 Subcommands:
   doctor                        probe the key; print the scope map
@@ -61,18 +62,36 @@ MONTH = 30 * DAY  # nominal monthly interval for cap accounting / cancel step
 # ---------------------------------------------------------------------------
 # Secret masking — every byte of output goes through this.
 # ---------------------------------------------------------------------------
-_SECRET_RE = re.compile(r"(rk|sk|pk|whsec)_(test|live)_[A-Za-z0-9]+")
+# The char class includes '*' so Stripe's own partially-starred echo form
+# (e.g. rk_test_51H****abcd or a fully-starred rk_test_****) is caught, not
+# just clean tokens; the (test|live)_ infix is optional so bare whsec_ secrets
+# match too. The leading \b is load-bearing: without it the prefixes match
+# inside ordinary words (network_, work_, task_, risk_, disk_ all contain a
+# prefix+underscore substring) and corrupt legitimate output.
+_SECRET_RE = re.compile(r"\b(rk|sk|pk|whsec)_(?:(test|live)_)?[A-Za-z0-9*]+")
+_ACCT_RE = re.compile(r"\bacct_[A-Za-z0-9*]+")
 _LIVE_KEY = None
 
 
+def _redact_key(m) -> str:
+    prefix, mode = m.group(1), m.group(2)
+    return f"{prefix}_{mode}_***" if mode else f"{prefix}_***"
+
+
 def mask(text) -> str:
-    """Redact any Stripe secret from a string. Idempotent."""
+    """Redact any Stripe secret or account identifier from a string. Idempotent.
+
+    Covers rk_/sk_/pk_/whsec_ keys (including Stripe's starred echo form), the
+    exact loaded key, and acct_ account IDs — in error and exception text too.
+    """
     if text is None:
         return ""
     s = str(text)
     if _LIVE_KEY:
         s = s.replace(_LIVE_KEY, "rk_test_***")
-    return _SECRET_RE.sub(lambda m: f"{m.group(1)}_{m.group(2)}_***", s)
+    s = _SECRET_RE.sub(_redact_key, s)
+    s = _ACCT_RE.sub("acct_***", s)
+    return s
 
 
 def say(*parts) -> None:
