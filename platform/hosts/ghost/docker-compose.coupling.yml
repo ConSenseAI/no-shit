@@ -1,0 +1,45 @@
+# Ghost <-> Stripe lifecycle-coupling proof. The default profile uses SQLite;
+# add --profile mysql and GHOST_DB=mysql for production-parity MySQL 8.
+name: noshit-f0-ghost
+
+services:
+  mysql:
+    profiles: ["mysql"]
+    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+    container_name: noshit-f0-ghost-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ghost-root-local
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost
+      MYSQL_PASSWORD: ghost-local
+    volumes:
+      - ghost-mysql:/var/lib/mysql
+    networks:
+      - f0ghost
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+  ghost:
+    environment:
+      # Ghost 5.130.6 misclassifies rk_test_ as live unless run in production.
+      # Ghost classifies rk_test_ as live and rejects it in development. In
+      # production mode it also requires an HTTPS canonical URL; the proof uses
+      # X-Forwarded-Proto to model the loopback reverse-proxy boundary.
+      NODE_ENV: production
+      url: https://localhost:2368
+      stripeDirect: "true"
+      WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?set by coupling-demo.sh}
+      database__client: ${GHOST_DB:-sqlite3}
+      database__connection__filename: /var/lib/ghost/content/data/ghost-f0.db
+      database__connection__host: mysql
+      database__connection__port: "3306"
+      database__connection__user: ghost
+      database__connection__password: ghost-local
+      database__connection__database: ghost
+
+volumes:
+  ghost-mysql:

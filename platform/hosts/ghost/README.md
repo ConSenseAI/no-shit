@@ -15,8 +15,26 @@ wall time, self-cleaning and re-runnable from a cold start.
 > days in 31 s wall; test clock cascade-deleted. Verbatim run appended to
 > [`TRANSCRIPT.md`](TRANSCRIPT.md). The scope-wall analysis below is preserved
 > as the record of the *first* run and of what a test-clock-only key can and
-> cannot prove. Ghost **billing coupling** (Stripe tiers inside Ghost) remains
-> an F1 item — it needs a webhook path into Ghost, not just key scope.
+> cannot prove.
+>
+> **Update (2026-07-16): Ghost↔Stripe billing coupling PROVEN (browserless
+> lifecycle).** With all three scopes granted (lifecycle + `checkout_session_write`
+> + `stripecli_session_write`), `./coupling-demo.sh` proves the real
+> webhook-driven coupling on **both SQLite and MySQL 8 — 22/22 each, ~56 s per
+> DB**. Real Ghost magic-link signup → member `free`; real Stripe
+> product/price/customer/`pm_card_visa`/8-day-trial subscription; the
+> member↔customer and product↔tier mappings are bootstrapped exactly as Checkout
+> would create them; then **every lifecycle transition is driven by a real
+> forwarded webhook** (Stripe CLI `listen` on the internal network → Ghost
+> `WEBHOOK_SECRET` local mode) and asserted against Ghost's own DB:
+> `trialing`→member `paid`, trial-convert→`active` + $12 invoice, renewal→2nd
+> $12, `cancel_at_period_end`, boundary→`canceled` + member `free`, no third
+> charge. **Deferred, honestly not claimed:** `checkout.session.completed` /
+> hosted-Checkout card entry — Stripe has no faithful browserless completion API
+> for its hosted card UI, and browser automation was unavailable. Gotcha folded
+> in: Ghost 5.130.6 treats `rk_test_` as *live* (only recognizes `sk_test_`), so
+> direct-key mode runs `NODE_ENV=production`, which then requires an HTTPS
+> canonical URL — modeled via `X-Forwarded-Proto: https` on the loopback boundary.
 
 Compose project: **`noshit-f0-ghost`**. Host ports: Ghost **2368**, Mailpit UI
 **8027** / SMTP **1027**. Databases are never host-published.
@@ -36,7 +54,7 @@ caps — is the binding constraint on this leg.
 | **Floor** — Stripe test-clock **mechanics** (frozen T0, forward-only advances landing the 8-day-trial script, poll-to-ready, forward-only invariant, delete-cascade) | full | **YES — proven** (12/15 assertions; 3 subscription facts BLOCKED) |
 | **Floor** — Stripe **subscription lifecycle** (customer + trial sub + trial_will_end + invoice + charge + cancel) | full | **BLOCKED by key scope** — code-complete & auto-runs on a scoped key |
 | **Target** — Ghost **membership + mail sink** (signup → mail in Mailpit → member state) | full | **YES — proven** (9/9 assertions) |
-| **Target** — Ghost **billing coupling** (Stripe tiers/checkout inside Ghost) | full | **BLOCKED by key scope** (Ghost connect needs the denied scopes) |
+| **Target** — Ghost **billing coupling** (real webhook-driven subscription lifecycle inside Ghost) | full | at first run **BLOCKED by key scope** → **PROVEN 2026-07-16** via `coupling-demo.sh`, 22/22 on SQLite + MySQL 8 (checkout-entry deferred; see the 2026-07-16 update above) |
 
 **Honest bottom line:** with *this* key, neither the full floor nor the full
 target is attainable — the subscription/billing half of both is walled off by
@@ -178,3 +196,13 @@ partially-starred echo form, and `acct_` account IDs) to `rk_test_***`. On the
 last day of the sandbox account, `stripe-clockctl.py
 cleanup` removes any tool-owned clocks; the demo already deletes its clock
 (cascading customers/subscriptions) on every run unless `--keep`.
+
+**Coupling path (`coupling-demo.sh`) exception:** Ghost's direct-key Stripe mode
+requires the secret + publishable keys in Ghost's own `settings` table, so
+`seed_stripe_settings.py` writes them there (Ghost-internal, sourced from the
+gitignored `.env`, never committed); the `stripe listen --print-secret` signing
+secret lives only in shell memory and reaches Ghost as `WEBHOOK_SECRET` at
+runtime. **Hardening follow-up:** `coupling-demo.sh` and `seed_stripe_settings.py`
+pass the key to `docker run`/`docker exec` via `-e VAR=value`, so it is briefly
+visible in the host process table during a run — transient, test-key-only, never
+persisted to any file/log/commit; forwarding by name (`-e VAR`) is the pending fix.
