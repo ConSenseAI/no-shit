@@ -71,7 +71,14 @@ def validate(doc, fname):
     if lane not in LANES:
         err(errors, "$.lane", f"not one of {sorted(LANES)}")
 
-    need(errors, doc, "diff_ref", str, "$")
+    # §8: diff_ref is the violation diff — implant lanes (1/2/5/6) must carry it;
+    # implant-free lanes (3 unmodified-baseline cleans, 4 live services) must NOT.
+    diff_ref = doc.get("diff_ref")
+    if lane in (3, 4):
+        if isinstance(diff_ref, str) and diff_ref.strip():
+            err(errors, "$.diff_ref", f"lane {lane} is implant-free; diff_ref must be empty or absent")
+    else:
+        need(errors, doc, "diff_ref", str, "$")
 
     labels = need(errors, doc, "labels", list, "$") or []
     if not labels:
