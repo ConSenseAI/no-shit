@@ -1,0 +1,7 @@
+{
+  "name": "noshit-opensaas-toolchain",
+  "private": true,
+  "dependencies": {
+    "@wasp.sh/wasp-cli": "0.24.0"
+  }
+}

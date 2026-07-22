@@ -1,0 +1,102 @@
+# No Shit - Open SaaS bench leg. Project: noshit-f0-opensaas.
+# Host ports are loopback-only; PostgreSQL is never host-published.
+name: noshit-f0-opensaas
+
+services:
+  db:
+    image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: opensaas
+      POSTGRES_USER: opensaas
+      POSTGRES_PASSWORD: opensaas-local
+    volumes:
+      - opensaas-postgres:/var/lib/postgresql/data
+    networks: [opensaas]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opensaas -d opensaas"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  mailpit:
+    image: axllent/mailpit:v1.21.8@sha256:81370195cd4a0eab9604d17c2617a7525b0486f9365555253b6c5376c6350f1a
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "5000"
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    ports:
+      - "127.0.0.1:8028:8025"
+      - "127.0.0.1:1028:1025"
+    networks: [opensaas]
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  app:
+    image: noshit-f0-opensaas-app:81239fc
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://opensaas:opensaas-local@db:5432/opensaas
+      WASP_SERVER_URL: http://localhost:2369
+      WASP_WEB_CLIENT_URL: http://localhost:2369
+      WASP_SERVER_PORT: "2369"
+      WASP_WEB_CLIENT_PORT: "2369"
+      PORT: "2369"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USERNAME: bench
+      SMTP_PASSWORD: bench
+      ADMIN_EMAILS: ""
+      STRIPE_API_KEY: ${STRIPE_API_KEY:?set by demo.sh}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?set by demo.sh}
+      PAYMENTS_HOBBY_SUBSCRIPTION_PLAN_ID: ${PAYMENTS_HOBBY_SUBSCRIPTION_PLAN_ID:?set by demo.sh}
+      PAYMENTS_PRO_SUBSCRIPTION_PLAN_ID: ${PAYMENTS_PRO_SUBSCRIPTION_PLAN_ID:?set by demo.sh}
+      PAYMENTS_CREDITS_10_PLAN_ID: ${PAYMENTS_CREDITS_10_PLAN_ID:?set by demo.sh}
+      LEMONSQUEEZY_API_KEY: bench-unused
+      LEMONSQUEEZY_STORE_ID: bench-unused
+      LEMONSQUEEZY_WEBHOOK_SECRET: bench-unused
+      POLAR_ORGANIZATION_ACCESS_TOKEN: bench-unused
+      POLAR_WEBHOOK_SECRET: bench-unused
+      POLAR_SANDBOX_MODE: "true"
+      OPENAI_API_KEY: sk-bench-unused
+      PLAUSIBLE_API_KEY: bench-unused
+      PLAUSIBLE_SITE_ID: bench.invalid
+      PLAUSIBLE_BASE_URL: https://plausible.io/api
+      GOOGLE_ANALYTICS_CLIENT_EMAIL: bench@invalid.example
+      GOOGLE_ANALYTICS_PRIVATE_KEY: bench-unused
+      GOOGLE_ANALYTICS_PROPERTY_ID: "0"
+      AWS_S3_IAM_ACCESS_KEY: bench-unused
+      AWS_S3_IAM_SECRET_KEY: bench-unused
+      AWS_S3_FILES_BUCKET: bench-unused
+      AWS_S3_REGION: us-east-1
+    ports:
+      - "127.0.0.1:2369:2369"
+    networks: [opensaas]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:2369/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 120
+      start_period: 60s
+
+networks:
+  opensaas:
+    driver: bridge
+
+volumes:
+  opensaas-postgres:
